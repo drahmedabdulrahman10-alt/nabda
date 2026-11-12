@@ -21,8 +21,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -33,7 +31,6 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CalendarMonth
-import androidx.compose.material.icons.filled.CalendarViewWeek
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.DragIndicator
 import androidx.compose.material.icons.filled.RadioButtonUnchecked
@@ -51,6 +48,9 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -60,6 +60,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -117,6 +118,7 @@ fun InteractiveCalendarView(
     onToggleTaskCompleted: (DailyTask) -> Unit,
     onAddTaskForDate: (Date, String, TaskPriority) -> Unit,
     onNavigateToDate: (Date) -> Unit,
+    weekFooter: (@Composable (weekStart: Date) -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     val hapticFeedback = LocalHapticFeedback.current
@@ -125,7 +127,7 @@ fun InteractiveCalendarView(
     var selectedYear by remember { mutableIntStateOf(initialCal.get(Calendar.YEAR)) }
     var selectedMonth by remember { mutableIntStateOf(initialCal.get(Calendar.MONTH)) }
     var selectedWeekAnchorDate by remember { mutableStateOf(ArabicCalendarUtils.startOfDay(Date())) }
-    var gridMode by remember { mutableStateOf(CalendarGridMode.MONTH) }
+    var gridMode by rememberSaveable { mutableStateOf(CalendarGridMode.WEEK) }
 
     // Selected date for quick inspection / task creation dialog
     var inspectedCellDate by remember { mutableStateOf<CalendarGridCellDate?>(null) }
@@ -173,265 +175,109 @@ fun InteractiveCalendarView(
                 .padding(horizontal = 12.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            // 1. Top Calendar Controls Card (Year, Month Ribbon, Mode Switcher, Today Reset)
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                ),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(14.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    // Year Navigation Row + Hijri Subtitle + "اليوم" Quick Reset Button
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            IconButton(
-                                onClick = {
-                                    selectedYear -= 1
-                                    val cal = Calendar.getInstance().apply {
-                                        set(Calendar.YEAR, selectedYear)
-                                        set(Calendar.MONTH, selectedMonth)
-                                        set(Calendar.DAY_OF_MONTH, 1)
-                                    }
-                                    selectedWeekAnchorDate = cal.time
-                                },
-                                modifier = Modifier
-                                    .size(36.dp)
-                                    .testTag("calendar_prev_year_btn")
-                            ) {
-                                Icon(
-                                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                                    contentDescription = "السنة السابقة"
-                                )
-                            }
+            // Week / month switch and one navigation row, so the grid starts near the top.
+            SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+                SegmentedButton(
+                    selected = gridMode == CalendarGridMode.WEEK,
+                    onClick = { gridMode = CalendarGridMode.WEEK },
+                    shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
+                    modifier = Modifier.testTag("calendar_mode_week")
+                ) { Text("أسبوع") }
+                SegmentedButton(
+                    selected = gridMode == CalendarGridMode.MONTH,
+                    onClick = { gridMode = CalendarGridMode.MONTH },
+                    shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
+                    modifier = Modifier.testTag("calendar_mode_month")
+                ) { Text("شهر") }
+            }
 
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text(
-                                    text = "${monthNames[selectedMonth]} $selectedYear",
-                                    style = MaterialTheme.typography.titleLarge,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-                                Text(
-                                    text = hijriSubtitle,
-                                    style = MaterialTheme.typography.labelMedium,
-                                    color = MaterialTheme.colorScheme.secondary,
-                                    fontWeight = FontWeight.Medium
-                                )
-                            }
-
-                            IconButton(
-                                onClick = {
-                                    selectedYear += 1
-                                    val cal = Calendar.getInstance().apply {
-                                        set(Calendar.YEAR, selectedYear)
-                                        set(Calendar.MONTH, selectedMonth)
-                                        set(Calendar.DAY_OF_MONTH, 1)
-                                    }
-                                    selectedWeekAnchorDate = cal.time
-                                },
-                                modifier = Modifier
-                                    .size(36.dp)
-                                    .testTag("calendar_next_year_btn")
-                            ) {
-                                Icon(
-                                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
-                                    contentDescription = "السنة التالية"
-                                )
-                            }
-                        }
-
-                        OutlinedButton(
-                            onClick = {
-                                val nowCal = Calendar.getInstance()
-                                selectedYear = nowCal.get(Calendar.YEAR)
-                                selectedMonth = nowCal.get(Calendar.MONTH)
-                                selectedWeekAnchorDate = ArabicCalendarUtils.startOfDay(Date())
-                            },
-                            modifier = Modifier.testTag("calendar_jump_today_button"),
-                            shape = RoundedCornerShape(50),
-                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Today,
-                                contentDescription = null,
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text("اليوم", style = MaterialTheme.typography.labelLarge)
-                        }
+            fun step(forward: Boolean) {
+                if (gridMode == CalendarGridMode.WEEK) {
+                    selectedWeekAnchorDate = ArabicCalendarUtils.addDays(selectedWeekAnchorDate, if (forward) 7 else -7)
+                    val cal = Calendar.getInstance().apply { time = selectedWeekAnchorDate }
+                    selectedYear = cal.get(Calendar.YEAR)
+                    selectedMonth = cal.get(Calendar.MONTH)
+                } else {
+                    val cal = Calendar.getInstance().apply {
+                        clear()
+                        set(selectedYear, selectedMonth, 1)
+                        add(Calendar.MONTH, if (forward) 1 else -1)
                     }
-
-                    // Horizontal Scrollable Month Selector Ribbon (Jan - Dec / يناير - ديسمبر)
-                    LazyRow(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .testTag("calendar_month_ribbon"),
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        itemsIndexed(monthNames) { monthIdx, monthName ->
-                            val isSelected = monthIdx == selectedMonth
-                            FilterChip(
-                                selected = isSelected,
-                                onClick = {
-                                    selectedMonth = monthIdx
-                                    val cal = Calendar.getInstance().apply {
-                                        set(Calendar.YEAR, selectedYear)
-                                        set(Calendar.MONTH, selectedMonth)
-                                        set(Calendar.DAY_OF_MONTH, 1)
-                                    }
-                                    selectedWeekAnchorDate = cal.time
-                                },
-                                label = {
-                                    Text(
-                                        text = monthName,
-                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
-                                    )
-                                },
-                                colors = FilterChipDefaults.filterChipColors(
-                                    selectedContainerColor = MaterialTheme.colorScheme.primary,
-                                    selectedLabelColor = MaterialTheme.colorScheme.onPrimary
-                                ),
-                                modifier = Modifier.testTag("calendar_month_chip_$monthIdx")
-                            )
-                        }
-                    }
-
-                    // View Mode Toggle: عرض الشهر (Month Grid) vs عرض الأسبوع (Week Grid)
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            FilterChip(
-                                selected = gridMode == CalendarGridMode.MONTH,
-                                onClick = { gridMode = CalendarGridMode.MONTH },
-                                label = { Text("عرض الشهر") },
-                                leadingIcon = {
-                                    Icon(
-                                        imageVector = Icons.Default.CalendarMonth,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(16.dp)
-                                    )
-                                },
-                                colors = FilterChipDefaults.filterChipColors(
-                                    selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                                    selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
-                                ),
-                                modifier = Modifier.testTag("calendar_mode_month_chip")
-                            )
-
-                            FilterChip(
-                                selected = gridMode == CalendarGridMode.WEEK,
-                                onClick = { gridMode = CalendarGridMode.WEEK },
-                                label = { Text("عرض الأسبوع") },
-                                leadingIcon = {
-                                    Icon(
-                                        imageVector = Icons.Default.CalendarViewWeek,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(16.dp)
-                                    )
-                                },
-                                colors = FilterChipDefaults.filterChipColors(
-                                    selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                                    selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
-                                ),
-                                modifier = Modifier.testTag("calendar_mode_week_chip")
-                            )
-                        }
-
-                        if (gridMode == CalendarGridMode.WEEK) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                IconButton(
-                                    onClick = {
-                                        selectedWeekAnchorDate = ArabicCalendarUtils.addDays(selectedWeekAnchorDate, -7)
-                                        val cal = Calendar.getInstance().apply { time = selectedWeekAnchorDate }
-                                        selectedYear = cal.get(Calendar.YEAR)
-                                        selectedMonth = cal.get(Calendar.MONTH)
-                                    },
-                                    modifier = Modifier.size(32.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                                        contentDescription = "الأسبوع السابق"
-                                    )
-                                }
-                                Text(
-                                    text = "تنقّل الأسبوع",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                                IconButton(
-                                    onClick = {
-                                        selectedWeekAnchorDate = ArabicCalendarUtils.addDays(selectedWeekAnchorDate, 7)
-                                        val cal = Calendar.getInstance().apply { time = selectedWeekAnchorDate }
-                                        selectedYear = cal.get(Calendar.YEAR)
-                                        selectedMonth = cal.get(Calendar.MONTH)
-                                    },
-                                    modifier = Modifier.size(32.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
-                                        contentDescription = "الأسبوع التالي"
-                                    )
-                                }
-                            }
-                        }
-                    }
+                    selectedYear = cal.get(Calendar.YEAR)
+                    selectedMonth = cal.get(Calendar.MONTH)
+                    selectedWeekAnchorDate = cal.time
                 }
             }
 
-            // Drag & Drop Hint Bar
-            Surface(
-                color = if (draggedTask != null) {
-                    MaterialTheme.colorScheme.primaryContainer
+            val title = if (gridMode == CalendarGridMode.WEEK && gridCells.isNotEmpty()) {
+                val first = Calendar.getInstance().apply { time = gridCells.first().date }
+                val last = Calendar.getInstance().apply { time = gridCells.last().date }
+                val firstMonth = monthNames[first.get(Calendar.MONTH)]
+                val lastMonth = monthNames[last.get(Calendar.MONTH)]
+                if (firstMonth == lastMonth) {
+                    "‏${first.get(Calendar.DAY_OF_MONTH)}‏ – ‏${last.get(Calendar.DAY_OF_MONTH)} $lastMonth"
                 } else {
-                    MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f)
-                },
-                shape = RoundedCornerShape(12.dp),
-                modifier = Modifier.fillMaxWidth()
+                    "‏${first.get(Calendar.DAY_OF_MONTH)} $firstMonth‏ – ‏${last.get(Calendar.DAY_OF_MONTH)} $lastMonth"
+                }
+            } else {
+                "${monthNames[selectedMonth]} $selectedYear"
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 12.dp, vertical = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                IconButton(onClick = { step(forward = false) }, modifier = Modifier.testTag("calendar_prev")) {
+                    Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = "السابق")
+                }
+                Column(
+                    modifier = Modifier.weight(1f),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.DragIndicator,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(18.dp)
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
-                        text = if (draggedTask != null) {
-                            val targetDate = dropTargetDateKey?.let { dateByKey[it] }
-                            if (targetDate != null) {
-                                "أفلت المهمة «${draggedTask?.title}» لنقلها إلى: ${ArabicCalendarUtils.formatGregorianArabic(targetDate)}"
-                            } else {
-                                "اسحب المهمة «${draggedTask?.title}» فوق خلية اليوم الجديد..."
-                            }
+                        text = hijriSubtitle,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                IconButton(onClick = { step(forward = true) }, modifier = Modifier.testTag("calendar_next")) {
+                    Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = "التالي")
+                }
+                TextButton(
+                    onClick = {
+                        val nowCal = Calendar.getInstance()
+                        selectedYear = nowCal.get(Calendar.YEAR)
+                        selectedMonth = nowCal.get(Calendar.MONTH)
+                        selectedWeekAnchorDate = ArabicCalendarUtils.startOfDay(Date())
+                    },
+                    modifier = Modifier.testTag("calendar_jump_today_button")
+                ) { Text("اليوم") }
+            }
+
+            // Shown only while a task is being dragged, to say where it will land.
+            val dragging = draggedTask
+            if (dragging != null) {
+                val targetDate = dropTargetDateKey?.let { dateByKey[it] }
+                Surface(
+                    color = MaterialTheme.colorScheme.primaryContainer,
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = if (targetDate != null) {
+                            "أفلت «${dragging.title}» لنقلها إلى ${ArabicCalendarUtils.formatGregorianArabic(targetDate)}"
                         } else {
-                            "اضغط مطوّلاً على أي مهمة واسحبها إلى يوم آخر لتغيير موعدها، أو اضغط على أي يوم لإدارة مهامه."
+                            "اسحب «${dragging.title}» فوق اليوم الجديد"
                         },
                         style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSecondaryContainer,
-                        fontWeight = if (draggedTask != null) FontWeight.Bold else FontWeight.Normal
+                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
                     )
                 }
             }
@@ -545,17 +391,8 @@ fun InteractiveCalendarView(
                 }
             }
 
-            // Priority Legend Footer
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 4.dp, vertical = 2.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                PriorityLegendItem(label = "أولوية مرتفعة", bg = PriorityHighContainerLight, accent = PriorityHighAccent)
-                PriorityLegendItem(label = "أولوية متوسطة", bg = PriorityMediumContainerLight, accent = PriorityMediumAccent)
-                PriorityLegendItem(label = "أولوية منخفضة", bg = PriorityLowContainerLight, accent = PriorityLowAccent)
+            if (gridMode == CalendarGridMode.WEEK && weekFooter != null && gridCells.isNotEmpty()) {
+                weekFooter(gridCells.first().date)
             }
         }
 
@@ -795,31 +632,6 @@ private fun CalendarTaskChip(
             overflow = TextOverflow.Ellipsis,
             textDecoration = if (task.isCompleted) TextDecoration.LineThrough else TextDecoration.None,
             modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
-        )
-    }
-}
-
-@Composable
-private fun PriorityLegendItem(
-    label: String,
-    bg: Color,
-    accent: Color
-) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(4.dp)
-    ) {
-        Box(
-            modifier = Modifier
-                .size(12.dp)
-                .clip(RoundedCornerShape(3.dp))
-                .background(bg)
-                .border(1.dp, accent, RoundedCornerShape(3.dp))
-        )
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 }

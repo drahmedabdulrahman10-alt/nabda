@@ -29,6 +29,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.filled.FormatQuote
@@ -36,6 +37,7 @@ import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material.icons.filled.Repeat
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Today
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -43,10 +45,12 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -77,14 +81,17 @@ import io.github.drahmedabdulrahman10_alt.nabda.ui.screens.GoalsScreen
 import io.github.drahmedabdulrahman10_alt.nabda.ui.screens.QuotesScreen
 import io.github.drahmedabdulrahman10_alt.nabda.ui.screens.SettingsScreen
 import io.github.drahmedabdulrahman10_alt.nabda.ui.screens.TodayScreen
-import io.github.drahmedabdulrahman10_alt.nabda.ui.screens.WeekDaysScreen
-import io.github.drahmedabdulrahman10_alt.nabda.ui.screens.WeeksDashboardScreen
+import io.github.drahmedabdulrahman10_alt.nabda.ui.components.BulkScheduleImportDialog
+import io.github.drahmedabdulrahman10_alt.nabda.ui.components.InteractiveCalendarView
 import io.github.drahmedabdulrahman10_alt.nabda.ui.theme.NabdaTheme
 import io.github.drahmedabdulrahman10_alt.nabda.ui.viewmodel.DailyTasksViewModel
 import io.github.drahmedabdulrahman10_alt.nabda.ui.viewmodel.GoalsViewModel
 import io.github.drahmedabdulrahman10_alt.nabda.ui.viewmodel.SettingsViewModel
 import io.github.drahmedabdulrahman10_alt.nabda.ui.viewmodel.UiState
+import io.github.drahmedabdulrahman10_alt.nabda.ui.viewmodel.WeeksDashboardData
 import io.github.drahmedabdulrahman10_alt.nabda.ui.viewmodel.WeeksDashboardViewModel
+import io.github.drahmedabdulrahman10_alt.nabda.util.ArabicCalendarUtils
+import java.util.Date
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 
@@ -97,6 +104,7 @@ enum class NabdaDestination(val titleAr: String, val icon: ImageVector, val pare
     KINSHIP("صلة الرحم", Icons.Default.Favorite, MORE),
     QUOTES("الحِكم والاقتباسات", Icons.Default.FormatQuote, MORE),
     GOALS("الأهداف", Icons.Default.Flag, MORE),
+    IMPORT("استيراد جدول", Icons.Default.Download, MORE),
     SETTINGS("الإعدادات", Icons.Default.Settings, MORE)
 }
 
@@ -141,7 +149,6 @@ fun NabdaApp() {
     AskForNotificationPermissionOnce()
 
     var destination by rememberSaveable { mutableStateOf(NabdaDestination.TODAY) }
-    var weekIdForDaysView by rememberSaveable { mutableStateOf<String?>(null) }
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val notifier = remember { Notifier(snackbarHostState, scope) }
@@ -149,17 +156,12 @@ fun NabdaApp() {
     val dailyViewModel = nabdaViewModel { DailyTasksViewModel(it, LOCAL_USER_ID) }
 
     fun navigate(target: NabdaDestination) {
-        weekIdForDaysView = null
         destination = target
     }
 
     // Back steps up one level (sub-screen → المزيد → اليوم) and only leaves the app from "اليوم".
-    BackHandler(enabled = destination != NabdaDestination.TODAY || weekIdForDaysView != null) {
-        if (weekIdForDaysView != null) {
-            weekIdForDaysView = null
-        } else {
-            destination = destination.parent ?: NabdaDestination.TODAY
-        }
+    BackHandler(enabled = destination != NabdaDestination.TODAY) {
+        destination = destination.parent ?: NabdaDestination.TODAY
     }
 
     NabdaTheme(darkTheme = darkTheme) {
@@ -175,17 +177,11 @@ fun NabdaApp() {
                 topBar = {
                     if (destination != NabdaDestination.TODAY) {
                         TopAppBar(
-                            title = { Text(if (weekIdForDaysView != null) "أيام الأسبوع" else destination.titleFull()) },
+                            title = { Text(destination.titleFull()) },
                             navigationIcon = {
-                                if (destination.parent != null || weekIdForDaysView != null) {
+                                if (destination.parent != null) {
                                     IconButton(
-                                        onClick = {
-                                            if (weekIdForDaysView != null) {
-                                                weekIdForDaysView = null
-                                            } else {
-                                                destination = destination.parent ?: NabdaDestination.TODAY
-                                            }
-                                        }
+                                        onClick = { destination = destination.parent ?: NabdaDestination.TODAY }
                                     ) {
                                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "رجوع")
                                     }
@@ -240,17 +236,10 @@ fun NabdaApp() {
                             )
                         }
                         NabdaDestination.CALENDAR -> CalendarDestination(
-                            weekIdForDaysView = weekIdForDaysView,
-                            onWeekSelected = { weekIdForDaysView = it },
                             onOpenDay = { dayId ->
                                 dailyViewModel.selectDay(dayId)
                                 navigate(NabdaDestination.TODAY)
                             },
-                            onOpenToday = {
-                                dailyViewModel.selectToday()
-                                navigate(NabdaDestination.TODAY)
-                            },
-                            onOpenGoals = { navigate(NabdaDestination.GOALS) },
                             modifier = contentModifier
                         )
                         NabdaDestination.DAILY -> {
@@ -261,7 +250,9 @@ fun NabdaApp() {
                                 modifier = contentModifier
                             )
                         }
-                        NabdaDestination.MORE -> MoreScreen(onOpen = ::navigate, modifier = contentModifier)
+                        // IMPORT opens as a dialog over المزيد, so it never becomes a screen of its own.
+                        NabdaDestination.MORE, NabdaDestination.IMPORT ->
+                            MoreScreen(onOpen = ::navigate, modifier = contentModifier)
                         NabdaDestination.KINSHIP -> {
                             val dailyState by dailyViewModel.uiState.collectAsStateWithLifecycle()
                             ContactsScreen(uiState = dailyState, viewModel = dailyViewModel, modifier = contentModifier)
@@ -306,47 +297,79 @@ private fun NabdaDestination.titleFull(): String =
 
 @Composable
 private fun CalendarDestination(
-    weekIdForDaysView: String?,
-    onWeekSelected: (String) -> Unit,
     onOpenDay: (String) -> Unit,
-    onOpenToday: () -> Unit,
-    onOpenGoals: () -> Unit,
     modifier: Modifier
 ) {
     val weeksViewModel = nabdaViewModel { WeeksDashboardViewModel(it, LOCAL_USER_ID) }
     val weeksState by weeksViewModel.uiState.collectAsStateWithLifecycle()
-    val isImporting by weeksViewModel.isImportingSchedule.collectAsStateWithLifecycle()
-    val importError by weeksViewModel.importError.collectAsStateWithLifecycle()
-    val banner by weeksViewModel.statusBannerMessage.collectAsStateWithLifecycle()
+    val data = (weeksState as? UiState.Success)?.data ?: WeeksDashboardData()
+    ShowViewModelMessages(weeksViewModel)
 
-    val activeWeek = (weeksState as? UiState.Success)?.data?.weeks?.firstOrNull { it.week.id == weekIdForDaysView }
-    if (activeWeek != null) {
-        WeekDaysScreen(weekSummary = activeWeek, onSelectDay = onOpenDay, modifier = modifier)
-        return
-    }
-    WeeksDashboardScreen(
-        uiState = weeksState,
-        onSelectWeek = { onWeekSelected(it.week.id) },
-        onJumpToToday = onOpenToday,
-        onSaveReflection = weeksViewModel::saveWeekReflection,
-        isImportingSchedule = isImporting,
-        importError = importError,
-        statusBannerMessage = banner,
-        onClearImportError = weeksViewModel::clearImportError,
-        onClearStatusBanner = weeksViewModel::clearStatusBanner,
-        onShowStatusBanner = weeksViewModel::showStatusBanner,
-        onImportScheduleJson = { rawJson, onSuccess -> weeksViewModel.importBulkScheduleJson(rawJson) { onSuccess() } },
+    var reflectionWeekStart by remember { mutableStateOf<Date?>(null) }
+
+    InteractiveCalendarView(
+        tasksByDateKey = data.tasksByDateKey,
         onMoveTaskToDate = weeksViewModel::moveTaskToDate,
-        onToggleTaskFromCalendar = weeksViewModel::toggleTaskFromCalendar,
+        onToggleTaskCompleted = weeksViewModel::toggleTaskFromCalendar,
         onAddTaskForDate = weeksViewModel::addTaskForDate,
         onNavigateToDate = { date -> weeksViewModel.openOrCreateDayForDate(date, onOpenDay) },
-        onOpenGoals = onOpenGoals,
+        weekFooter = { weekStart ->
+            val note = data.reflectionFor(weekStart)
+            TextButton(onClick = { reflectionWeekStart = weekStart }) {
+                Text(if (note.isBlank()) "أضف تأملات الأسبوع" else "تأملات الأسبوع: $note", maxLines = 2)
+            }
+        },
         modifier = modifier
     )
+
+    reflectionWeekStart?.let { weekStart ->
+        var text by remember(weekStart) { mutableStateOf(data.reflectionFor(weekStart)) }
+        AlertDialog(
+            onDismissRequest = { reflectionWeekStart = null },
+            title = { Text("تأملات الأسبوع") },
+            text = {
+                OutlinedTextField(
+                    value = text,
+                    onValueChange = { text = it },
+                    placeholder = { Text("ما أبرز ما أنجزته وتعلّمته هذا الأسبوع؟") },
+                    minLines = 3,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    weeksViewModel.saveWeekReflection(ArabicCalendarUtils.buildWeekId(LOCAL_USER_ID, weekStart), text)
+                    reflectionWeekStart = null
+                }) { Text("حفظ") }
+            },
+            dismissButton = {
+                TextButton(onClick = { reflectionWeekStart = null }) { Text("إلغاء") }
+            }
+        )
+    }
+}
+
+private fun WeeksDashboardData.reflectionFor(weekStart: Date): String {
+    val id = ArabicCalendarUtils.buildWeekId(LOCAL_USER_ID, weekStart)
+    return weeks.firstOrNull { it.week.id == id }?.week?.reflection.orEmpty()
+}
+
+/** Shows the calendar view model's one-off messages (task moved, task added, import done) as snackbars. */
+@Composable
+private fun ShowViewModelMessages(weeksViewModel: WeeksDashboardViewModel) {
+    val notifier = LocalNotifier.current
+    val banner by weeksViewModel.statusBannerMessage.collectAsStateWithLifecycle()
+    LaunchedEffect(banner) {
+        banner?.let {
+            notifier.show(it)
+            weeksViewModel.clearStatusBanner()
+        }
+    }
 }
 
 @Composable
 private fun MoreScreen(onOpen: (NabdaDestination) -> Unit, modifier: Modifier) {
+    var showImport by remember { mutableStateOf(false) }
     Column(modifier = modifier.padding(horizontal = 16.dp)) {
         val entries = NabdaDestination.entries.filter { it.parent == NabdaDestination.MORE }
         entries.forEachIndexed { index, entry ->
@@ -354,7 +377,7 @@ private fun MoreScreen(onOpen: (NabdaDestination) -> Unit, modifier: Modifier) {
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable { onOpen(entry) }
+                    .clickable { if (entry == NabdaDestination.IMPORT) showImport = true else onOpen(entry) }
                     .heightIn(min = 60.dp)
                     .padding(horizontal = 4.dp)
             ) {
@@ -370,6 +393,25 @@ private fun MoreScreen(onOpen: (NabdaDestination) -> Unit, modifier: Modifier) {
             if (index != entries.lastIndex) HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
         }
     }
+    if (showImport) ImportScheduleDialog(onDismiss = { showImport = false })
+}
+
+@Composable
+private fun ImportScheduleDialog(onDismiss: () -> Unit) {
+    val weeksViewModel = nabdaViewModel { WeeksDashboardViewModel(it, LOCAL_USER_ID) }
+    val isImporting by weeksViewModel.isImportingSchedule.collectAsStateWithLifecycle()
+    val importError by weeksViewModel.importError.collectAsStateWithLifecycle()
+    ShowViewModelMessages(weeksViewModel)
+    BulkScheduleImportDialog(
+        isImporting = isImporting,
+        errorMessage = importError,
+        onDismiss = {
+            weeksViewModel.clearImportError()
+            onDismiss()
+        },
+        onClearError = weeksViewModel::clearImportError,
+        onImportJson = { rawJson -> weeksViewModel.importBulkScheduleJson(rawJson) { onDismiss() } }
+    )
 }
 
 /** Asks for the notification permission the first time the app opens (Android 13+). */
