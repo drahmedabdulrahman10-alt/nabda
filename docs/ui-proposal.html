@@ -1,0 +1,401 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>نَبضة — مقترح الواجهة</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --page:#F4F1EA; --card:#FFFFFF; --ink:#1B2622; --muted:#5E6B65; --line:#E2DCCF;
+  --accent:#1F6F54; --accent-soft:#DCEFE6; --warn:#B4472F;
+}
+@media (prefers-color-scheme: dark){
+  :root{ --page:#0F1513; --card:#171F1C; --ink:#E7EDE9; --muted:#9AA8A1; --line:#27322E;
+    --accent:#6FCBA6; --accent-soft:#1D372E; --warn:#E58A73; }
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--page);color:var(--ink);font-family:"Cairo","Segoe UI",Tahoma,sans-serif;line-height:1.7;font-size:16px}
+.wrap{max-width:1040px;margin:0 auto;padding:32px 16px 80px}
+h1{font-size:30px;margin:0 0 4px;font-weight:700}
+h2{font-size:22px;margin:56px 0 6px;font-weight:700}
+h3{font-size:16px;margin:0 0 6px;font-weight:700}
+p{margin:0 0 12px;max-width:68ch}
+.lead{color:var(--muted);font-size:17px}
+.tag{display:inline-block;font-size:12px;font-weight:700;padding:2px 10px;border-radius:99px;background:var(--accent-soft);color:var(--accent);margin-inline-end:6px}
+.tag.old{background:transparent;border:1px solid var(--line);color:var(--muted)}
+.principles{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px;margin:24px 0 0}
+.principles div{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px}
+.principles b{display:block;font-size:17px}
+.principles span{color:var(--muted);font-size:14px}
+.row{display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start;margin-top:20px}
+.col{flex:1 1 300px;min-width:0}
+.cap{font-size:14px;color:var(--muted);margin-top:10px;max-width:320px}
+ul.notes{padding-inline-start:20px;margin:8px 0;color:var(--muted);font-size:15px}
+ul.notes li{margin-bottom:4px}
+ul.notes b{color:var(--ink)}
+
+/* ---------- phone mock ---------- */
+.phone{--bg:#F6F3EC;--sf:#FFFFFF;--tx:#1E2A26;--mu:#66736D;--ol:#E5E0D4;--pr:#1F6F54;--pc:#DCEFE6;--gold:#A87B1F;
+  --hi:#C2452D;--me:#C98A1B;--lo:#8A9791;
+  width:300px;height:610px;border-radius:34px;border:8px solid #20262A;background:var(--bg);color:var(--tx);
+  position:relative;overflow:hidden;display:flex;flex-direction:column;font-size:12.5px;line-height:1.5;flex:none}
+.phone.dark{--bg:#101614;--sf:#18211D;--tx:#E6ECE8;--mu:#93A19A;--ol:#28342F;--pr:#6FCBA6;--pc:#1E3A30;--gold:#D9B45C;--hi:#EE8A72;--me:#E3B458;--lo:#7F8D86}
+.phone svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.sb{height:22px;flex:none;display:flex;justify-content:space-between;align-items:center;padding:0 16px;font-size:10px;color:var(--mu)}
+.scr{flex:1;overflow:hidden;padding:0 12px;position:relative}
+.nav{flex:none;display:flex;border-top:1px solid var(--ol);background:var(--sf);height:50px}
+.nav div{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:9.5px;color:var(--mu);gap:1px;white-space:nowrap;overflow:hidden}
+.nav .on{color:var(--pr);font-weight:700}
+/* new design pieces */
+.hd{display:flex;align-items:center;justify-content:space-between;padding:6px 2px 8px}
+.hd b{font-size:17px;display:block;line-height:1.3}
+.hd small{color:var(--mu);font-size:10.5px}
+.ring{width:34px;height:34px;border-radius:50%;background:conic-gradient(var(--pr) 0 40%,var(--ol) 0);display:grid;place-items:center;flex:none}
+.ring i{width:26px;height:26px;border-radius:50%;background:var(--bg);display:grid;place-items:center;font-style:normal;font-size:9px;font-weight:700}
+.days{display:flex;gap:4px;margin-bottom:10px}
+.days span{flex:1;text-align:center;border-radius:10px;padding:3px 0;font-size:9px;color:var(--mu);line-height:1.35}
+.days span b{display:block;font-size:12px;color:var(--tx)}
+.days .on{background:var(--pr);color:#fff}.days .on b{color:#fff}
+.phone.dark .days .on,.phone.dark .days .on b{color:#0E1512}
+.sec{display:flex;justify-content:space-between;align-items:baseline;margin:8px 2px 4px;font-weight:700;font-size:12px}
+.sec small{font-weight:500;color:var(--mu);font-size:10.5px}
+.list{background:var(--sf);border:1px solid var(--ol);border-radius:14px;overflow:hidden}
+.t{display:flex;align-items:center;gap:9px;padding:9px 10px;border-bottom:1px solid var(--ol);min-height:40px}
+.t:last-child{border-bottom:0}
+.ck{width:18px;height:18px;border-radius:50%;border:1.8px solid var(--mu);flex:none;display:grid;place-items:center}
+.ck.d{background:var(--pr);border-color:var(--pr);color:#fff}.ck.d svg{width:11px;height:11px;stroke-width:3}
+.t span{flex:1;min-width:0}
+.t.done span{color:var(--mu);text-decoration:line-through}
+.dot{width:8px;height:8px;border-radius:50%;flex:none}
+.hi{background:var(--hi)}.me{background:var(--me)}.lo{background:var(--lo)}
+.chips{display:flex;gap:5px;flex-wrap:wrap}
+.chip{display:flex;align-items:center;gap:4px;border:1px solid var(--ol);background:var(--sf);border-radius:99px;padding:3px 9px;font-size:10.5px}
+.chip.d{background:var(--pc);border-color:transparent;color:var(--pr);font-weight:600}
+.chip svg{width:11px;height:11px}
+.chip em{font-style:normal;color:var(--gold);font-weight:700;font-size:9.5px}
+.line{display:flex;align-items:center;gap:8px;background:var(--sf);border:1px solid var(--ol);border-radius:12px;padding:7px 10px;margin-top:8px}
+.line span{flex:1;min-width:0}.line svg{color:var(--pr)}
+.quote{font-family:"Amiri",serif;color:var(--mu);font-size:12.5px;text-align:center;margin-top:9px}
+.qa{flex:none;display:flex;align-items:center;gap:6px;padding:7px 10px;background:var(--bg)}
+.qa .f{flex:1;background:var(--sf);border:1px solid var(--ol);border-radius:99px;padding:7px 12px;color:var(--mu);display:flex;justify-content:space-between;align-items:center;min-width:0}
+.qa .f.act{border-color:var(--pr);color:var(--tx)}
+.qa .go{width:32px;height:32px;border-radius:50%;background:var(--pr);color:#fff;display:grid;place-items:center;flex:none}
+.phone.dark .qa .go{color:#0E1512}
+.pri{display:flex;gap:10px;align-items:center;padding:0 14px 6px;font-size:10px;color:var(--mu)}
+.pri .dot{width:13px;height:13px}.pri .sel{outline:2px solid var(--tx);outline-offset:2px}
+.kb{flex:none;height:150px;background:var(--ol);display:grid;place-items:center;color:var(--mu);font-size:11px}
+.snack{position:absolute;inset-inline:10px;bottom:8px;background:#26302C;color:#F0F4F1;border-radius:10px;padding:8px 12px;display:flex;justify-content:space-between;font-size:11.5px}
+.snack b{color:#8FDDBB}
+.swipe{position:relative;border-radius:14px;overflow:hidden;margin-top:6px}
+.swipe .bg{position:absolute;inset:0;display:flex;align-items:center;padding:0 12px;color:#fff;font-size:11px;font-weight:700;gap:6px}
+.swipe .bg.mv{background:var(--pr);justify-content:flex-start}
+.swipe .bg.del{background:var(--hi);justify-content:flex-end}
+.swipe .t{background:var(--sf);border:1px solid var(--ol);border-radius:14px;position:relative}
+.sheet{position:absolute;inset-inline:0;bottom:0;background:var(--sf);border-radius:18px 18px 0 0;border-top:1px solid var(--ol);padding:8px 14px 12px}
+.sheet i{display:block;width:34px;height:4px;border-radius:9px;background:var(--ol);margin:0 auto 8px}
+.sheet div{display:flex;align-items:center;gap:10px;padding:8px 2px;border-bottom:1px solid var(--ol)}
+.sheet div:last-child{border:0}
+/* old design pieces */
+.otop{display:flex;justify-content:space-between;align-items:center;padding:5px 0 7px;font-weight:700;font-size:13px}
+.otop span{background:var(--pc);border-radius:99px;padding:2px 9px;font-size:10px}
+.ocard{background:var(--sf);border:1px solid var(--ol);border-radius:14px;padding:9px;margin-bottom:7px}
+.ocard small{color:var(--mu);display:block;font-size:10px}
+.bar{height:5px;border-radius:9px;background:var(--ol);margin:6px 0}
+.bar i{display:block;width:40%;height:100%;background:var(--pr);border-radius:9px}
+.fabs{position:absolute;inset-inline:8px;bottom:8px;display:flex;gap:6px}
+.fabs span{flex:1;text-align:center;border-radius:13px;padding:9px 4px;font-size:10px;font-weight:700;background:var(--pc);box-shadow:0 2px 6px #0003;white-space:nowrap;overflow:hidden}
+.fabs span+span{background:var(--pr);color:#fff}
+.fold{position:absolute;inset-inline:0;bottom:52px;border-top:2px dashed var(--hi);color:var(--hi);font-size:10px;font-weight:700;text-align:center;background:linear-gradient(transparent,var(--bg) 60%);padding-top:4px;height:30px}
+
+/* ---------- decisions ---------- */
+.dec{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:6px 18px;margin-top:16px}
+.dec label{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--line);cursor:pointer}
+.dec label:last-child{border-bottom:0}
+.dec input{width:20px;height:20px;margin-top:5px;accent-color:var(--accent);flex:none}
+.dec b{display:block}
+.dec span{color:var(--muted);font-size:14px}
+.dec code{font-family:inherit;font-weight:700;color:var(--accent);margin-inline-end:6px}
+button{font:inherit;font-weight:700;border:0;border-radius:12px;padding:12px 22px;background:var(--accent);color:#fff;cursor:pointer;margin-top:18px}
+@media (prefers-color-scheme: dark){button{color:#0E1512}}
+button:focus-visible,input:focus-visible{outline:3px solid var(--warn);outline-offset:2px}
+textarea{display:block;width:100%;margin-top:12px;min-height:110px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--ink);font:inherit;font-size:14px;padding:12px}
+.note{border-inline-start:4px solid var(--accent);background:var(--card);padding:12px 16px;border-radius:0 12px 12px 0;margin-top:16px;font-size:15px}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+    <symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0014 0M12 18v3"/></symbol>
+    <symbol id="i-up" viewBox="0 0 24 24"><path d="M12 19V5M6 11l6-6 6 6"/></symbol>
+    <symbol id="i-phone" viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 005 5L15 13l5 2v4a2 2 0 01-2 2A15 15 0 013 6a2 2 0 012-2z"/></symbol>
+    <symbol id="i-chat" viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/></symbol>
+    <symbol id="i-today" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="3"/><path d="M4 10h16M9 3v4M15 3v4"/></symbol>
+    <symbol id="i-week" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M9 5v14M15 5v14"/></symbol>
+    <symbol id="i-habit" viewBox="0 0 24 24"><path d="M4 12a8 8 0 0114-5l2-2v6h-6l2-2a5 5 0 10.5 6"/></symbol>
+    <symbol id="i-more" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="19" cy="12" r="1.3"/></symbol>
+    <symbol id="i-flag" viewBox="0 0 24 24"><path d="M6 21V4h11l-2 4 2 4H6"/></symbol>
+    <symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 20s-7-4.5-7-10a4 4 0 017-2.5A4 4 0 0119 10c0 5.500-7 10-7 10z"/></symbol>
+    <symbol id="i-quote" viewBox="0 0 24 24"><path d="M5 17V9a4 4 0 014-4M14 17V9a4 4 0 014-4"/></symbol>
+    <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.600 5.600l2.100 2.100M16.300 16.300l2.100 2.100M5.600 18.400l2.100-2.100M16.300 7.700l2.100-2.100"/></symbol>
+    <symbol id="i-next" viewBox="0 0 24 24"><path d="M19 12H5M11 6l-6 6 6 6"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><path d="M5 7h14M10 7V4h4v3M7 7l1 13h8l1-13"/></symbol>
+  </defs>
+</svg>
+
+<div class="wrap">
+  <h1>نَبضة — مقترح الواجهة الجديدة</h1>
+  <p class="lead">للمراجعة والموافقة قبل أي تعديل في الواجهة. الرسومات تقريبية لتوضيح الترتيب والتفاعل، وليست الشكل النهائي بالبكسل.</p>
+
+  <div class="principles">
+    <div><b>المهام أولًا</b><span>تفتح التطبيق فترى مهام اليوم فورًا، بلا تمرير.</span></div>
+    <div><b>إضافة بخطوتين</b><span>اكتب واضغط إدخال. الحقل يبقى جاهزًا للمهمة التالية.</span></div>
+    <div><b>أقل على الشاشة</b><span>كل ما ليس مهمة يُضغط في سطر واحد أو ينتقل إلى «المزيد».</span></div>
+  </div>
+
+  <!-- 1 -->
+  <h2>1. شاشة اليوم</h2>
+  <p>الترتيب الحالي يضع خمس بطاقات قبل المهام. المقترح يقلب الترتيب ويضغط الباقي.</p>
+  <div class="row">
+    <div class="col">
+      <span class="tag old">الحالي</span>
+      <div class="phone" role="img" aria-label="رسم تقريبي للشاشة الحالية: بطاقة التاريخ ثم الاقتباس ثم صلة الرحم ثم العادات، والمهام تحت حد الشاشة">
+        <div class="sb"><span>9:41</span><span>نَبضة</span></div>
+        <div class="scr">
+          <div class="otop">نَبضة • مهام اليوم <span>اليوم</span></div>
+          <div class="ocard"><b>الخميس، 12 نوفمبر 2026</b><small>التقويم الهجري: 3 جمادى الآخرة 1448 هـ</small><small>نسبة الإنجاز الكلية: 4 من 10 (40%)</small><div class="bar"><i></i></div><div class="chips"><span class="chip">السبت</span><span class="chip">الأحد</span><span class="chip">الاثنين</span><span class="chip">الثلاثاء</span></div></div>
+          <div class="ocard"><b>حكمة اليوم</b><small>﴿ أَلَا بِذِكْرِ اللَّهِ تَطْمَئِنُّ الْقُلُوبُ ﴾</small><small>سورة الرعد - آية ٢٨</small></div>
+          <div class="ocard"><b>صلة الرحم اليومية</b><small>أضف أقاربك ليقترح عليك التطبيق كل يوم قريبًا للتواصل معه.</small></div>
+          <div class="sec">المهام الثابتة والأوراد اليومية <small>إدارة العادات</small></div>
+          <div class="ocard">أذكار الصباح<small>07:00</small></div>
+          <div class="ocard">ورد القرآن الكريم اليومي<small>06:30</small></div>
+          <div class="ocard">صلاة الضحى<small>09:00</small></div>
+          <div class="fold">المهام تبدأ من هنا — تحت حد الشاشة</div>
+          <div class="fabs"><span>إضافة ذكية (صوت/نص)</span><span>+ إضافة مهمة</span></div>
+        </div>
+        <div class="nav"><div class="on"><svg><use href="#i-today"/></svg>مهام اليوم</div><div><svg><use href="#i-week"/></svg>الأسابيع</div><div><svg><use href="#i-habit"/></svg>العادات الثابتة</div><div><svg><use href="#i-heart"/></svg>صلة الرحم</div><div><svg><use href="#i-quote"/></svg>مكتبة الحِكم</div></div>
+      </div>
+    </div>
+    <div class="col">
+      <span class="tag">المقترح</span>
+      <div class="phone" role="img" aria-label="رسم تقريبي للشاشة المقترحة: ترويسة مضغوطة، شريط أيام، قائمة المهام، العادات كصف واحد، ثم شريط إضافة سريعة فوق شريط التنقل">
+        <div class="sb"><span>9:41</span><span></span></div>
+        <div class="scr">
+          <div class="hd"><div><b>الخميس 12 نوفمبر</b><small>3 جمادى الآخرة 1448</small></div><div class="ring"><i>40%</i></div></div>
+          <div class="days"><span>س<b>7</b></span><span>ح<b>8</b></span><span>ن<b>9</b></span><span>ث<b>10</b></span><span>ر<b>11</b></span><span class="on">خ<b>12</b></span><span>ج<b>13</b></span></div>
+          <div class="sec">المهام <small>1 من 4</small></div>
+          <div class="list">
+            <div class="t"><i class="ck"></i><span>مذاكرة محاضرة الجراحة</span><i class="dot hi"></i></div>
+            <div class="t"><i class="ck"></i><span>شراء طلبات البيت</span><i class="dot me"></i></div>
+            <div class="t"><i class="ck"></i><span>قراءة فصل من الكتاب</span><i class="dot lo"></i></div>
+            <div class="t done"><i class="ck d"><svg><use href="#i-check"/></svg></i><span>إرسال التقرير</span></div>
+          </div>
+          <div class="sec">الأوراد <small>3 من 5</small></div>
+          <div class="chips">
+            <span class="chip d"><svg><use href="#i-check"/></svg>أذكار الصباح <em>12</em></span>
+            <span class="chip d"><svg><use href="#i-check"/></svg>ورد القرآن <em>30</em></span>
+            <span class="chip d"><svg><use href="#i-check"/></svg>الضحى <em>4</em></span>
+            <span class="chip">أذكار المساء</span><span class="chip">الوتر</span>
+          </div>
+          <div class="line"><svg><use href="#i-heart"/></svg><span>صِل اليوم: خالتك فاطمة</span><svg><use href="#i-phone"/></svg><svg><use href="#i-chat"/></svg></div>
+          <div class="quote">﴿ أَلَا بِذِكْرِ اللَّهِ تَطْمَئِنُّ الْقُلُوبُ ﴾</div>
+        </div>
+        <div class="qa"><div class="f">أضف مهمة… <svg><use href="#i-mic"/></svg></div></div>
+        <div class="nav"><div class="on"><svg><use href="#i-today"/></svg>اليوم</div><div><svg><use href="#i-week"/></svg>التقويم</div><div><svg><use href="#i-habit"/></svg>العادات</div><div><svg><use href="#i-more"/></svg>المزيد</div></div>
+      </div>
+    </div>
+    <div class="col">
+      <h3>ما الذي تغيّر</h3>
+      <ul class="notes">
+        <li><b>ترويسة بسطرين</b> بدل بطاقة كاملة، مع حلقة التقدم فقط.</li>
+        <li><b>شريط الأيام بالحرف والرقم</b>، والسحب يمينًا ويسارًا ينقل بين الأيام.</li>
+        <li><b>المهام في قائمة واحدة مسطّحة</b> مرتبة بالأولوية، ونقطة لون بدل سطر «الأولوية: مرتفعة».</li>
+        <li><b>المنجزة تنزل لآخر القائمة</b> بخط مشطوب، وتُطوى إذا زادت عن ثلاث.</li>
+        <li><b>الأوراد صف واحد من الأزرار</b>: ضغطة تعلّمها، والرقم هو السلسلة بالأيام.</li>
+        <li><b>صلة الرحم والاقتباس سطر لكل منهما.</b></li>
+        <li><b>شريط إضافة ثابت</b> بدل الزرين العائمين.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 2 -->
+  <h2>2. إضافة مهمة</h2>
+  <p>الآن: زر ← نافذة ← ضغطة على الحقل ← كتابة ← حفظ، وتتكرر لكل مهمة. المقترح: ضغطة على الشريط ثم كتابة وإدخال.</p>
+  <div class="row">
+    <div class="col">
+      <div class="phone" role="img" aria-label="شريط الإضافة أثناء الكتابة مع ثلاث نقاط لاختيار الأولوية فوق لوحة المفاتيح">
+        <div class="sb"><span>9:41</span><span></span></div>
+        <div class="scr">
+          <div class="hd"><div><b>الخميس 12 نوفمبر</b></div></div>
+          <div class="sec">المهام <small>1 من 5</small></div>
+          <div class="list">
+            <div class="t"><i class="ck"></i><span>مذاكرة محاضرة الجراحة</span><i class="dot hi"></i></div>
+            <div class="t"><i class="ck"></i><span>شراء طلبات البيت</span><i class="dot me"></i></div>
+            <div class="t"><i class="ck"></i><span>حجز موعد الأسنان</span><i class="dot me"></i></div>
+          </div>
+        </div>
+        <div class="pri">الأولوية <i class="dot hi"></i><i class="dot me sel"></i><i class="dot lo"></i></div>
+        <div class="qa"><div class="f act">الاتصال بالسباك|</div><div class="go"><svg><use href="#i-up"/></svg></div></div>
+        <div class="kb">لوحة المفاتيح</div>
+      </div>
+      <p class="cap">الكيبورد يفتح تلقائيًا. زر الإدخال يضيف المهمة ويُفرغ الحقل، ويبقى الكيبورد مفتوحًا للمهمة التالية.</p>
+    </div>
+    <div class="col">
+      <h3>التفاصيل</h3>
+      <ul class="notes">
+        <li><b>الأولوية اختيارية</b>: ثلاث نقاط فوق الحقل، والافتراضي «متوسطة» (حاليًا الافتراضي «مرتفعة»).</li>
+        <li><b>الميكروفون داخل الحقل</b>: إملاء صوتي مباشر. إن كان النص طويلًا وفيه أكثر من مهمة يُعرض خيار «تقسيم بالذكاء الاصطناعي».</li>
+        <li><b>المهمة تظهر فورًا</b> في القائمة دون انتظار الشبكة.</li>
+        <li><b>استيراد JSON</b> ينتقل إلى «المزيد»، لأنه استخدام نادر.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 3 -->
+  <h2>3. التعامل مع المهمة</h2>
+  <p>الآن كل صف فيه مربع اختيار وثلاثة أزرار، والحذف بضغطة واحدة بلا تراجع.</p>
+  <div class="row">
+    <div class="col">
+      <div class="phone" style="height:330px" role="img" aria-label="سحب المهمة: في اتجاه للترحيل إلى الغد وفي الاتجاه الآخر للحذف، ثم شريط تراجع أسفل الشاشة">
+        <div class="scr" style="padding-top:14px">
+          <div class="swipe"><div class="bg mv"><svg><use href="#i-next"/></svg>إلى الغد</div><div class="t" style="margin-inline-start:88px"><i class="ck"></i><span>شراء طلبات البيت</span><i class="dot me"></i></div></div>
+          <div class="swipe"><div class="bg del">حذف<svg><use href="#i-trash"/></svg></div><div class="t" style="margin-inline-end:70px"><i class="ck"></i><span>قراءة فصل</span><i class="dot lo"></i></div></div>
+          <div class="swipe"><div class="t"><i class="ck"></i><span>مذاكرة محاضرة الجراحة</span><i class="dot hi"></i></div></div>
+          <div class="snack"><span>تم حذف «قراءة فصل»</span><b>تراجع</b></div>
+        </div>
+      </div>
+    </div>
+    <div class="col">
+      <h3>القواعد</h3>
+      <ul class="notes">
+        <li><b>ضغطة على الدائرة</b>: إتمام، مع اهتزاز خفيف.</li>
+        <li><b>ضغطة على العنوان</b>: تعديل في نفس مكانه.</li>
+        <li><b>سحب في اتجاه</b>: ترحيل للغد. <b>سحب في الاتجاه الآخر</b>: حذف.</li>
+        <li><b>ضغطة مطوّلة</b>: قائمة فيها نفس الأوامر (ترحيل، نقل لتاريخ، تغيير الأولوية، حذف) لمن لا يحب السحب.</li>
+        <li><b>كل حذف أو ترحيل يظهر معه «تراجع»</b> لخمس ثوانٍ، في كل الشاشات.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 4 -->
+  <h2>4. التنقل</h2>
+  <p>الآن ثماني وجهات موزعة بين شريط سفلي بخمسة عناصر وقائمة جانبية، وزر «اليوم» مكرر في مكانين. المقترح شريط واحد بأربعة عناصر بلا قائمة جانبية.</p>
+  <div class="row">
+    <div class="col">
+      <div class="phone" style="height:330px" role="img" aria-label="قائمة المزيد تحتوي على الأهداف وصلة الرحم ومكتبة الحكم والإعدادات">
+        <div class="scr">
+          <div class="sheet"><i></i>
+            <div><svg><use href="#i-flag"/></svg>الأهداف</div>
+            <div><svg><use href="#i-heart"/></svg>صلة الرحم</div>
+            <div><svg><use href="#i-quote"/></svg>مكتبة الحِكم</div>
+            <div><svg><use href="#i-gear"/></svg>الإعدادات</div>
+          </div>
+        </div>
+        <div class="nav"><div><svg><use href="#i-today"/></svg>اليوم</div><div><svg><use href="#i-week"/></svg>التقويم</div><div><svg><use href="#i-habit"/></svg>العادات</div><div class="on"><svg><use href="#i-more"/></svg>المزيد</div></div>
+      </div>
+    </div>
+    <div class="col">
+      <ul class="notes">
+        <li><b>اليوم</b>: الشاشة الرئيسية.</li>
+        <li><b>التقويم</b>: يدمج «الأسابيع» و«التقويم الشامل» في شاشة واحدة بتبديل أسبوع/شهر.</li>
+        <li><b>العادات</b>: إدارة الأوراد وسلاسلها.</li>
+        <li><b>المزيد</b>: الأهداف، صلة الرحم، مكتبة الحِكم، الإعدادات، استيراد جدول.</li>
+        <li><b>زر الرجوع</b> يعيدك للشاشة السابقة ثم لليوم، ولا يخرج من التطبيق إلا من شاشة اليوم.</li>
+        <li><b>الضغط على «اليوم» وأنت فيها</b> يعيدك لتاريخ اليوم، فلا حاجة لزر مستقل.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 5 -->
+  <h2>5. الشكل العام والوضع الداكن</h2>
+  <div class="row">
+    <div class="col">
+      <div class="phone dark" role="img" aria-label="الشاشة المقترحة في الوضع الداكن">
+        <div class="sb"><span>9:41</span><span></span></div>
+        <div class="scr">
+          <div class="hd"><div><b>الخميس 12 نوفمبر</b><small>3 جمادى الآخرة 1448</small></div><div class="ring"><i>40%</i></div></div>
+          <div class="days"><span>س<b>7</b></span><span>ح<b>8</b></span><span>ن<b>9</b></span><span>ث<b>10</b></span><span>ر<b>11</b></span><span class="on">خ<b>12</b></span><span>ج<b>13</b></span></div>
+          <div class="sec">المهام <small>1 من 4</small></div>
+          <div class="list">
+            <div class="t"><i class="ck"></i><span>مذاكرة محاضرة الجراحة</span><i class="dot hi"></i></div>
+            <div class="t"><i class="ck"></i><span>شراء طلبات البيت</span><i class="dot me"></i></div>
+            <div class="t"><i class="ck"></i><span>قراءة فصل من الكتاب</span><i class="dot lo"></i></div>
+            <div class="t done"><i class="ck d"><svg><use href="#i-check"/></svg></i><span>إرسال التقرير</span></div>
+          </div>
+          <div class="sec">الأوراد <small>3 من 5</small></div>
+          <div class="chips">
+            <span class="chip d"><svg><use href="#i-check"/></svg>أذكار الصباح <em>12</em></span>
+            <span class="chip d"><svg><use href="#i-check"/></svg>ورد القرآن <em>30</em></span>
+            <span class="chip">أذكار المساء</span><span class="chip">الوتر</span>
+          </div>
+          <div class="quote">﴿ أَلَا بِذِكْرِ اللَّهِ تَطْمَئِنُّ الْقُلُوبُ ﴾</div>
+        </div>
+        <div class="qa"><div class="f">أضف مهمة… <svg><use href="#i-mic"/></svg></div></div>
+        <div class="nav"><div class="on"><svg><use href="#i-today"/></svg>اليوم</div><div><svg><use href="#i-week"/></svg>التقويم</div><div><svg><use href="#i-habit"/></svg>العادات</div><div><svg><use href="#i-more"/></svg>المزيد</div></div>
+      </div>
+    </div>
+    <div class="col">
+      <ul class="notes">
+        <li><b>نفس الهوية</b>: الأخضر الزمردي والخلفية الدافئة والذهبي للسلاسل. لا تغيير في روح التطبيق.</li>
+        <li><b>بطاقات أقل وحدود أخف</b>: قائمة واحدة بدل بطاقة لكل مهمة، فيقل الرسم ويزيد المعروض.</li>
+        <li><b>خط Cairo للواجهة، و Amiri للآيات والحِكم فقط.</b></li>
+        <li><b>أيقونات مرسومة بدل الإيموجي</b> في العناوين والأزرار، لأن الإيموجي يختلف شكله من جهاز لآخر.</li>
+        <li><b>الوضع الداكن يتبع النظام</b> افتراضيًا ويُحفظ على الجهاز، فيختفي الوميض عند الفتح. يبقى خيار التثبيت في الإعدادات.</li>
+        <li><b>مساحة اللمس 48dp على الأقل</b> لكل زر، وتباين النص محقق في الوضعين.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- decisions -->
+  <h2>الموافقة</h2>
+  <p>علّم ما توافق عليه ثم اضغط الزر وانسخ النص إلى المحادثة. كل البنود الأساسية معلّمة مسبقًا، والإضافات غير معلّمة.</p>
+
+  <h3 style="margin-top:20px">تغييرات الواجهة</h3>
+  <div class="dec" id="core">
+    <label><input type="checkbox" checked data-id="U1"><div><b><code>U1</code>شريط الإضافة السريعة</b><span>حقل ثابت أسفل شاشة اليوم بدل الزرين العائمين والنافذة.</span></div></label>
+    <label><input type="checkbox" checked data-id="U2"><div><b><code>U2</code>المهام أولًا وترويسة مضغوطة</b><span>الترتيب الجديد لشاشة اليوم كما في القسم 1.</span></div></label>
+    <label><input type="checkbox" checked data-id="U3"><div><b><code>U3</code>صف مهمة أخف مع السحب والضغطة المطوّلة</b><span>دائرة وعنوان ونقطة أولوية، بدل أربعة أزرار.</span></div></label>
+    <label><input type="checkbox" checked data-id="U4"><div><b><code>U4</code>«تراجع» مع كل حذف وترحيل</b><span>في كل الشاشات، بدل الحذف الفوري.</span></div></label>
+    <label><input type="checkbox" checked data-id="U5"><div><b><code>U5</code>شريط تنقل بأربعة عناصر وإلغاء القائمة الجانبية</b><span>اليوم، التقويم، العادات، المزيد.</span></div></label>
+    <label><input type="checkbox" checked data-id="U6"><div><b><code>U6</code>دمج «الأسابيع» و«التقويم» في شاشة واحدة</b><span>تبديل أسبوع/شهر داخل نفس الشاشة.</span></div></label>
+    <label><input type="checkbox" checked data-id="U7"><div><b><code>U7</code>الأوراد صف أزرار واحد في شاشة اليوم</b><span>الإدارة الكاملة تبقى في تبويب العادات.</span></div></label>
+    <label><input type="checkbox" checked data-id="U8"><div><b><code>U8</code>صلة الرحم والاقتباس سطر لكل منهما</b><span>بدل بطاقتين كبيرتين أعلى الشاشة.</span></div></label>
+    <label><input type="checkbox" checked data-id="U9"><div><b><code>U9</code>شريط أيام بالحرف والرقم مع السحب بين الأيام</b><span></span></div></label>
+    <label><input type="checkbox" checked data-id="U10"><div><b><code>U10</code>الوضع الداكن يتبع النظام</b><span>مع خيار التثبيت في الإعدادات.</span></div></label>
+    <label><input type="checkbox" checked data-id="U11"><div><b><code>U11</code>أيقونات بدل الإيموجي، و Cairo للواجهة و Amiri للحِكم</b><span></span></div></label>
+  </div>
+
+  <h3 style="margin-top:28px">إضافات اختيارية</h3>
+  <div class="dec" id="extra">
+    <label><input type="checkbox" data-id="E1"><div><b><code>E1</code>ترحيل المهام غير المنجزة</b><span>عند فتح يوم جديد: «لديك 3 مهام من أمس، ترحيلها لليوم؟»</span></div></label>
+    <label><input type="checkbox" data-id="E2"><div><b><code>E2</code>Widget على الشاشة الرئيسية</b><span>مهام اليوم مع زر إضافة، دون فتح التطبيق.</span></div></label>
+    <label><input type="checkbox" data-id="E3"><div><b><code>E3</code>مهام متكررة</b><span>يوميًا، أسبوعيًا، أو في أيام محددة.</span></div></label>
+    <label><input type="checkbox" data-id="E4"><div><b><code>E4</code>إعادة ترتيب المهام بالسحب</b><span></span></div></label>
+    <label><input type="checkbox" data-id="E5"><div><b><code>E5</code>وقت وتذكير اختياري للمهمة</b><span></span></div></label>
+    <label><input type="checkbox" data-id="E6"><div><b><code>E6</code>اختصار «إضافة مهمة» من أيقونة التطبيق</b><span>ضغطة مطوّلة على الأيقونة تفتح الإضافة مباشرة.</span></div></label>
+  </div>
+
+  <button type="button" id="gen">جهّز ردّي</button>
+  <textarea id="out" aria-label="نص الرد للنسخ" readonly placeholder="سيظهر نص الرد هنا. انسخه والصقه في المحادثة، وأضف أي ملاحظات تحته."></textarea>
+  <div class="note">أي بند تريده بشكل مختلف، اكتب رقمه والتعديل المطلوب في المحادثة. لن يبدأ أي تعديل في الواجهة قبل ردّك.</div>
+</div>
+
+<script>
+document.getElementById('gen').addEventListener('click', function () {
+  function pick(sel, on) {
+    return Array.prototype.filter.call(document.querySelectorAll(sel + ' input'), function (i) { return i.checked === on; })
+      .map(function (i) { return i.dataset.id; });
+  }
+  var yes = pick('#core', true), no = pick('#core', false), ex = pick('#extra', true);
+  var t = 'موافق على: ' + (yes.length ? yes.join('، ') : 'لا شيء');
+  if (no.length) t += '\nغير موافق على: ' + no.join('، ');
+  t += '\nالإضافات المطلوبة: ' + (ex.length ? ex.join('، ') : 'لا شيء الآن');
+  var out = document.getElementById('out');
+  out.value = t; out.focus(); out.select();
+  try { navigator.clipboard.writeText(t); } catch (e) {}
+});
+</script>
+</body>
+</html>

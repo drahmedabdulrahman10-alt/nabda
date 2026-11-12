@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <group
+        android:scaleX="0.55"
+        android:scaleY="0.55"
+        android:translateX="5.4"
+        android:translateY="5.4">
+        <!-- Bold filled crescent moon and spiritual star -->
+        <path
+            android:fillColor="#D4AF37"
+            android:pathData="M12,3c-4.97,0 -9,4.03 -9,9s4.03,9 9,9c3.53,0 6.58,-2.04 8.06,-5.01C18.96,16.32 17.79,16.5 16.5,16.5c-4.14,0 -7.5,-3.36 -7.5,-7.5c0,-2.42 1.15,-4.57 2.93,-5.94C11.95,3.02 11.98,3 12,3z" />
+        <path
+            android:fillColor="#FAF6F0"
+            android:pathData="M17.5,5.5L18.6,8.1L21.5,8.5L19.3,10.4L19.9,13.2L17.5,11.7L15.1,13.2L15.7,10.4L13.5,8.5L16.4,8.1L17.5,5.5Z" />
+    </group>
+</vector>

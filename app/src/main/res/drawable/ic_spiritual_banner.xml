@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="320dp"
+    android:height="180dp"
+    android:viewportWidth="320"
+    android:viewportHeight="180">
+    <path android:pathData="M0,0h320v180h-320z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="0"
+                android:startY="0"
+                android:endX="320"
+                android:endY="180"
+                android:type="linear">
+                <item android:color="#0D3B2E" android:offset="0.0" />
+                <item android:color="#165240" android:offset="0.6" />
+                <item android:color="#1F6A54" android:offset="1.0" />
+            </gradient>
+        </aapt:attr>
+    </path>
+    <!-- Subtle decorative geometric arches and crescent -->
+    <path
+        android:fillColor="#1AD4AF37"
+        android:pathData="M260,-20 A100,100 0 1,0 360,80 A100,100 0 1,0 260,-20 Z" />
+    <path
+        android:fillColor="#26D4AF37"
+        android:pathData="M40,140 A70,70 0 1,0 180,140 A70,70 0 1,0 40,140 Z" />
+    <path
+        android:fillColor="#D4AF37"
+        android:pathData="M275,32c-12,0 -22,10 -22,22s10,22 22,22c8.5,0 15.8,-4.9 19.4,-12c-2.7,0.8 -5.5,1.2 -8.6,1.2c-10,0 -18,-8 -18,-18c0,-5.8 2.8,-11 7,-14.3C274.9,32.9 275,32 275,32z" />
+</vector>
