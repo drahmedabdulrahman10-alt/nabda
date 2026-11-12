@@ -165,7 +165,13 @@ fun NabdaApp() {
     NabdaTheme(darkTheme = darkTheme) {
         CompositionLocalProvider(LocalNotifier provides notifier) {
             Scaffold(
-                snackbarHost = { SnackbarHost(snackbarHostState) },
+                snackbarHost = {
+                    // On "اليوم" lift the message above the quick-add bar so it never hides it.
+                    SnackbarHost(
+                        snackbarHostState,
+                        modifier = Modifier.padding(bottom = if (destination == NabdaDestination.TODAY) 76.dp else 0.dp)
+                    )
+                },
                 topBar = {
                     if (destination != NabdaDestination.TODAY) {
                         TopAppBar(

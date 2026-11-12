@@ -317,9 +317,20 @@ object NabdaNotificationEngine {
             cal.timeInMillis
         }
 
+        // Exact when the system allows it (USE_EXACT_ALARM on 13+, SCHEDULE_EXACT_ALARM on 12),
+        // otherwise inexact, which Android may delay by up to an hour.
+        val canExact = Build.VERSION.SDK_INT < Build.VERSION_CODES.S || alarmManager.canScheduleExactAlarms()
         try {
-            alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, pendingIntent)
+            if (canExact) {
+                alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, pendingIntent)
+            } else {
+                alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, pendingIntent)
+            }
         } catch (ignored: SecurityException) {
+            try {
+                alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, pendingIntent)
+            } catch (alsoIgnored: SecurityException) {
+            }
         }
     }
 }
