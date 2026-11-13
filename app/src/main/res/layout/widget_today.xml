@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Home-screen widget: today's unfinished tasks and a quick-add button. -->
+<!-- Home-screen widget: today's tasks (tap one to mark it done) and a quick-add button. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/widget_root"
     android:layout_width="match_parent"
@@ -47,19 +47,48 @@
             android:src="@drawable/ic_widget_add" />
     </LinearLayout>
 
-    <TextView android:id="@+id/widget_task_1" style="@style/WidgetTask" />
-    <TextView android:id="@+id/widget_task_2" style="@style/WidgetTask" />
-    <TextView android:id="@+id/widget_task_3" style="@style/WidgetTask" />
-    <TextView android:id="@+id/widget_task_4" style="@style/WidgetTask" />
-    <TextView android:id="@+id/widget_task_5" style="@style/WidgetTask" />
-    <TextView android:id="@+id/widget_task_6" style="@style/WidgetTask" />
+    <LinearLayout android:id="@+id/widget_row_1" style="@style/WidgetRow">
+        <TextView android:id="@+id/widget_task_1" style="@style/WidgetTask" />
+        <TextView android:id="@+id/widget_tag_1" style="@style/WidgetTag" />
+        <ImageView android:id="@+id/widget_dot_1" style="@style/WidgetDot" />
+    </LinearLayout>
+
+    <LinearLayout android:id="@+id/widget_row_2" style="@style/WidgetRow">
+        <TextView android:id="@+id/widget_task_2" style="@style/WidgetTask" />
+        <TextView android:id="@+id/widget_tag_2" style="@style/WidgetTag" />
+        <ImageView android:id="@+id/widget_dot_2" style="@style/WidgetDot" />
+    </LinearLayout>
+
+    <LinearLayout android:id="@+id/widget_row_3" style="@style/WidgetRow">
+        <TextView android:id="@+id/widget_task_3" style="@style/WidgetTask" />
+        <TextView android:id="@+id/widget_tag_3" style="@style/WidgetTag" />
+        <ImageView android:id="@+id/widget_dot_3" style="@style/WidgetDot" />
+    </LinearLayout>
+
+    <LinearLayout android:id="@+id/widget_row_4" style="@style/WidgetRow">
+        <TextView android:id="@+id/widget_task_4" style="@style/WidgetTask" />
+        <TextView android:id="@+id/widget_tag_4" style="@style/WidgetTag" />
+        <ImageView android:id="@+id/widget_dot_4" style="@style/WidgetDot" />
+    </LinearLayout>
+
+    <LinearLayout android:id="@+id/widget_row_5" style="@style/WidgetRow">
+        <TextView android:id="@+id/widget_task_5" style="@style/WidgetTask" />
+        <TextView android:id="@+id/widget_tag_5" style="@style/WidgetTag" />
+        <ImageView android:id="@+id/widget_dot_5" style="@style/WidgetDot" />
+    </LinearLayout>
+
+    <LinearLayout android:id="@+id/widget_row_6" style="@style/WidgetRow">
+        <TextView android:id="@+id/widget_task_6" style="@style/WidgetTask" />
+        <TextView android:id="@+id/widget_tag_6" style="@style/WidgetTag" />
+        <ImageView android:id="@+id/widget_dot_6" style="@style/WidgetDot" />
+    </LinearLayout>
 
     <TextView
         android:id="@+id/widget_empty"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:paddingTop="10dp"
-        android:text="لا مهام متبقية اليوم"
+        android:text="لا مهام اليوم بعد"
         android:textColor="@color/widget_text_secondary"
         android:textSize="13sp" />
 </LinearLayout>
