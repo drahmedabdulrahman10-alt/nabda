@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 108 108" width="432" height="432" role="img" aria-labelledby="t"><title id="t">أيقونة نَبضة المؤقتة</title>
+  <!-- Android adaptive-icon canvas (108); everything sits inside the 66-unit safe circle around (54,54).
+       Crescent = circle r24 at (54,56) minus circle r23 at (57.5,52.5): about 6 units at its widest, opening to the upper right.
+       Star: 4 points, outer r6.5, inner r1.8, at (72,32). Pulse: one beat on a flat line, stroke 4.2, round caps and joins. -->
+  <rect width="108" height="108" fill="#0D4A3A"/>
+  <path fill="#E2B85A" d="M42.92 34.70 A24 24 0 1 0 75.30 67.08 A23 23 0 1 1 42.92 34.70 Z"/>
+  <path fill="#E2B85A" d="M72 25.5 L73.8 30.2 L78.5 32 L73.8 33.8 L72 38.5 L70.2 33.8 L65.5 32 L70.2 30.2 Z"/>
+  <path fill="none" stroke="#FAF7F0" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"
+        d="M22 58 H40 L45 40 L50.5 70 L56 48 L60 61 L63.5 58 H86"/>
+</svg>

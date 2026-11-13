@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" role="img" aria-labelledby="t"><title id="t">نبضة — فكرة ج: وردة الأسبوع</title>
+  <!-- v3: seven pointed petals (vesicas from r=34 to r=118, width 32, arcs r=63.1), one every 360/7 degrees, around a dot r=22. -->
+  <path d="M128 94 A63.1 63.1 0 0 1 128 10 A63.1 63.1 0 0 1 128 94 Z" transform="rotate(0.00 128 128)"/>
+  <path d="M128 94 A63.1 63.1 0 0 1 128 10 A63.1 63.1 0 0 1 128 94 Z" transform="rotate(51.43 128 128)"/>
+  <path d="M128 94 A63.1 63.1 0 0 1 128 10 A63.1 63.1 0 0 1 128 94 Z" transform="rotate(102.86 128 128)"/>
+  <path d="M128 94 A63.1 63.1 0 0 1 128 10 A63.1 63.1 0 0 1 128 94 Z" transform="rotate(154.29 128 128)"/>
+  <path d="M128 94 A63.1 63.1 0 0 1 128 10 A63.1 63.1 0 0 1 128 94 Z" transform="rotate(205.71 128 128)"/>
+  <path d="M128 94 A63.1 63.1 0 0 1 128 10 A63.1 63.1 0 0 1 128 94 Z" transform="rotate(257.14 128 128)"/>
+  <path d="M128 94 A63.1 63.1 0 0 1 128 10 A63.1 63.1 0 0 1 128 94 Z" transform="rotate(308.57 128 128)"/>
+  <circle cx="128" cy="128" r="22"/>
+</svg>

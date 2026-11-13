@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" role="img" aria-labelledby="t"><title id="t">نبضة — فكرة ج: وردة الأسبوع</title>
+  <!-- Seven petals (ellipses rx=19 ry=40) whose centres sit 62 from the middle, one every 360/7 degrees, around a dot r=20: the week around today. -->
+  <ellipse cx="128" cy="66" rx="19" ry="40" transform="rotate(0.00 128 128)"/>
+  <ellipse cx="128" cy="66" rx="19" ry="40" transform="rotate(51.43 128 128)"/>
+  <ellipse cx="128" cy="66" rx="19" ry="40" transform="rotate(102.86 128 128)"/>
+  <ellipse cx="128" cy="66" rx="19" ry="40" transform="rotate(154.29 128 128)"/>
+  <ellipse cx="128" cy="66" rx="19" ry="40" transform="rotate(205.71 128 128)"/>
+  <ellipse cx="128" cy="66" rx="19" ry="40" transform="rotate(257.14 128 128)"/>
+  <ellipse cx="128" cy="66" rx="19" ry="40" transform="rotate(308.57 128 128)"/>
+  <circle cx="128" cy="128" r="20"/>
+</svg>

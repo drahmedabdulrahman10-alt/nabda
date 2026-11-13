@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>أفكار لوجو نَبضة</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  :root { --page:#F4F2EE; --ink:#151515; --muted:#666; --card:#fff; --line:#E3E0DA; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--page); color:var(--ink); font-family:"Cairo",system-ui,sans-serif; }
+  main { max-width:1100px; margin:0 auto; padding:24px 16px 56px; }
+  h1 { font-size:22px; margin:0 0 4px; }
+  .lead { color:var(--muted); margin:0 0 20px; font-size:14px; }
+  .concept { background:var(--card); border:1px solid var(--line); border-radius:18px; padding:18px; margin-bottom:16px;
+             display:grid; grid-template-columns:200px 1fr; gap:22px; align-items:center; }
+  .concept.rec { border:2px solid #111; }
+  .big { width:200px; height:200px; border:1px solid var(--line); border-radius:14px; display:grid; place-items:center; }
+  .big img { width:170px; height:170px; }
+  h2 { margin:0; font-size:18px; }
+  h2 small { font-weight:400; color:var(--muted); font-size:13px; margin-inline-start:6px; }
+  .badge { font-size:11px; background:#111; color:#fff; border-radius:99px; padding:1px 9px; margin-inline-start:6px; vertical-align:middle; }
+  .idea { margin:4px 0 12px; font-size:14px; }
+  .row { display:flex; flex-wrap:wrap; gap:14px; align-items:center; }
+  .sizes { display:flex; gap:12px; align-items:flex-end; padding:8px 12px; border:1px solid var(--line); border-radius:12px; }
+  .sizes div { text-align:center; font-size:10px; color:var(--muted); }
+  .sizes img { display:block; margin:0 auto 3px; }
+  .inv { background:#111; border-radius:12px; padding:10px; display:flex; gap:10px; align-items:center; }
+  .inv img { filter:invert(1); }
+  .app { width:64px; height:64px; border-radius:16px; background:#111; display:grid; place-items:center; }
+  .app img { width:40px; height:40px; filter:invert(1); }
+  .lockup { display:flex; align-items:center; gap:12px; padding:10px 16px; border:1px solid var(--line); border-radius:12px; }
+  .lockup img { width:58px; height:58px; }
+  .lockup span { font-size:42px; font-weight:800; line-height:1; }
+  @media (max-width:640px) { .concept { grid-template-columns:1fr; } .big { margin:0 auto; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>أفكار لوجو نَبضة — مرحلة الأبيض والأسود</h1>
+  <p class="lead">كل فكرة: الرمز كبير، وبأحجامه الحقيقية 64 و32 و16 بكسل، ومعكوس على أسود، وكأيقونة تطبيق، ومع الاسم. الاسم هنا بخط Cairo مؤقتًا؛ في النسخة النهائية يتحوّل لأشكال مرسومة.</p>
+  <div id="list"></div>
+</main>
+<script>
+const svgs = { "a-symbol.svg": `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" role="img" aria-labelledby="t"><title id="t">نبضة — فكرة أ: حرف النون</title> <path d="M52.8 96.6 A80 80 0 1 0 203.2 96.6" fill="none" stroke="#000" stroke-width="32" stroke-linecap="round"/> <circle cx="128" cy="86" r="21" fill="#000"/> </svg> `, "b-symbol.svg": `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" role="img" aria-labelledby="t"><title id="t">نبضة — فكرة ب: ورقة النبض</title> <g transform="rotate(-45 128 128)" fill="#000"> <path d="M48 128 A120 120 0 0 1 232 128 L196 124.5 C160 136 112 110 70 124 Z"/> <path d="M48 128 A120 120 0 0 0 232 128 L196 131.5 C160 143 112 117 70 132 Z"/> <rect x="14" y="121" width="40" height="14" rx="7"/> </g> </svg> `, "c-symbol.svg": `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" role="img" aria-labelledby="t"><title id="t">نبضة — فكرة ج: وردة الأسبوع</title> <path d="M128 94 A63.1 63.1 0 0 1 128 10 A63.1 63.1 0 0 1 128 94 Z" transform="rotate(0.00 128 128)"/> <path d="M128 94 A63.1 63.1 0 0 1 128 10 A63.1 63.1 0 0 1 128 94 Z" transform="rotate(51.43 128 128)"/> <path d="M128 94 A63.1 63.1 0 0 1 128 10 A63.1 63.1 0 0 1 128 94 Z" transform="rotate(102.86 128 128)"/> <path d="M128 94 A63.1 63.1 0 0 1 128 10 A63.1 63.1 0 0 1 128 94 Z" transform="rotate(154.29 128 128)"/> <path d="M128 94 A63.1 63.1 0 0 1 128 10 A63.1 63.1 0 0 1 128 94 Z" transform="rotate(205.71 128 128)"/> <path d="M128 94 A63.1 63.1 0 0 1 128 10 A63.1 63.1 0 0 1 128 94 Z" transform="rotate(257.14 128 128)"/> <path d="M128 94 A63.1 63.1 0 0 1 128 10 A63.1 63.1 0 0 1 128 94 Z" transform="rotate(308.57 128 128)"/> <circle cx="128" cy="128" r="22"/> </svg> `, };
+const src = f => "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svgs[f]);
+const concepts = [
+  { f:"a-symbol.svg", name:"أ — حرف النون", type:"حرف مُعدَّل", rec:true,
+    idea:"«ن» أول حرف في الاسم: وعاء يحتضن نقطة واحدة؛ اليوم بيلمّ لحظة هادية." },
+  { f:"b-symbol.svg", name:"ب — ورقة النبض", type:"رمز تصويري مجرد",
+    idea:"ورقة شجر يقسمها عرق على شكل موجة واحدة؛ نموّ هادي بإيقاع ثابت." },
+  { f:"c-symbol.svg", name:"ج — وردة الأسبوع", type:"رمز مجرد",
+    idea:"سبع بتلات مدببة حوالين نقطة: أيام الأسبوع حوالين يومك، بروح الزخرفة الإسلامية وبشكل عصري." }
+];
+document.getElementById("list").innerHTML = concepts.map(c => `
+  <section class="concept ${c.rec ? "rec" : ""}">
+    <div class="big"><img src="${src(c.f)}" alt=""></div>
+    <div>
+      <h2>${c.name}<small>${c.type}</small>${c.rec ? '<span class="badge">ترشيحي</span>' : ""}</h2>
+      <p class="idea">${c.idea}</p>
+      <div class="row">
+        <div class="sizes">
+          <div><img src="${src(c.f)}" width="64" height="64" alt="">64</div>
+          <div><img src="${src(c.f)}" width="32" height="32" alt="">32</div>
+          <div><img src="${src(c.f)}" width="16" height="16" alt="">16</div>
+        </div>
+        <div class="inv"><img src="${src(c.f)}" width="48" height="48" alt=""><img src="${src(c.f)}" width="24" height="24" alt=""></div>
+        <div class="app"><img src="${src(c.f)}" alt=""></div>
+        <div class="lockup"><img src="${src(c.f)}" alt=""><span>نَبضة</span></div>
+      </div>
+    </div>
+  </section>`).join("");
+</script>
+</body>
+</html>

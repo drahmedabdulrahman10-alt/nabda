@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" role="img" aria-labelledby="t"><title id="t">نبضة — فكرة ب: ورقة النبض</title>
+  <!-- v2: a horizontal leaf (two arcs r=120 from x=32 to 224) split by one gentle S-wave 10 units wide, then turned 45 degrees. -->
+  <g transform="rotate(-45 128 128)" fill="#000">
+    <path d="M32 128 A120 120 0 0 1 224 128 L204 123 C156 147 100 99 52 123 Z"/>
+    <path d="M32 128 A120 120 0 0 0 224 128 L204 133 C156 157 100 109 52 133 Z"/>
+  </g>
+</svg>

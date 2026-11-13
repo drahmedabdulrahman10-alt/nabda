@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" role="img" aria-labelledby="t"><title id="t">نبضة — فكرة ج: الحلقة والنقطة</title>
+  <!-- Day ring: circle r=80 at (128,140), stroke 28, open 60° at the top. The moment: dot r=20 sitting in the gap on the ring's line. -->
+  <path d="M168 70.72 A80 80 0 1 1 88 70.72" fill="none" stroke="#000" stroke-width="28" stroke-linecap="round"/>
+  <circle cx="128" cy="60" r="20" fill="#000"/>
+</svg>

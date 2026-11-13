@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" role="img" aria-labelledby="t"><title id="t">نبضة — فكرة ب: ورقة النبض</title>
+  <!-- v3: horizontal leaf (arcs r=120, x 48 to 232) with a stem from x=16; the vein is one soft wave that starts at the stem
+       and fades out before the tip, so it reads as a leaf and not a bean. Whole mark turned 45 degrees. -->
+  <g transform="rotate(-45 128 128)" fill="#000">
+    <path d="M48 128 A120 120 0 0 1 232 128 L196 124.5 C160 136 112 110 70 124 Z"/>
+    <path d="M48 128 A120 120 0 0 0 232 128 L196 131.5 C160 143 112 117 70 132 Z"/>
+    <rect x="14" y="121" width="40" height="14" rx="7"/>
+  </g>
+</svg>
