@@ -4,6 +4,7 @@ import android.app.Application
 import io.github.drahmedabdulrahman10_alt.nabda.data.repository.LOCAL_USER_ID
 import io.github.drahmedabdulrahman10_alt.nabda.di.RepositoryModule
 import io.github.drahmedabdulrahman10_alt.nabda.notifications.NabdaNotificationEngine
+import io.github.drahmedabdulrahman10_alt.nabda.widget.TodayWidgetProvider
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -18,8 +19,9 @@ class NabdaApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
-        // Keep reminder alarms in step with the data: whenever the settings, the daily tasks or the tasks
-        // change (and once at every start), set the alarms again.
+        // Keep reminder alarms and the home-screen widget in step with the data: whenever the settings,
+        // the daily tasks or the tasks change (and once at every start), set the alarms again and
+        // redraw the widget.
         scope.launch {
             val repository = RepositoryModule.provideNabdaRepository(this@NabdaApplication)
             combine(
@@ -29,6 +31,7 @@ class NabdaApplication : Application() {
             ) { _, _, _ -> }.collectLatest {
                 delay(500)
                 NabdaNotificationEngine.rescheduleAll(this@NabdaApplication)
+                TodayWidgetProvider.update(this@NabdaApplication)
             }
         }
     }

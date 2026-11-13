@@ -117,6 +117,10 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.zIndex
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import kotlinx.coroutines.delay
 
 @Composable
 private fun priorityColor(priority: TaskPriority): Color = when (priority) {
@@ -131,6 +135,7 @@ fun TodayScreen(
     viewModel: DailyTasksViewModel,
     onOpenDailyManagement: () -> Unit,
     onOpenSettings: () -> Unit,
+    focusQuickAddRequest: Int = 0,
     modifier: Modifier = Modifier
 ) {
     val notifier = LocalNotifier.current
@@ -327,6 +332,7 @@ fun TodayScreen(
         }
 
         QuickAddBar(
+            focusRequest = focusQuickAddRequest,
             onAdd = viewModel::addTask,
             onOpenAi = {
                 viewModel.clearAiDialogError()
@@ -880,11 +886,21 @@ private fun TaskPriority.shortLabel(): String = when (this) {
 
 @Composable
 private fun QuickAddBar(
+    focusRequest: Int,
     onAdd: (String, TaskPriority) -> Unit,
     onOpenAi: () -> Unit
 ) {
     var text by rememberSaveable { mutableStateOf("") }
     var priority by rememberSaveable { mutableStateOf(TaskPriority.MEDIUM) }
+    val focusRequester = remember { FocusRequester() }
+    val keyboard = LocalSoftwareKeyboardController.current
+    LaunchedEffect(focusRequest) {
+        if (focusRequest > 0) {
+            delay(150)
+            focusRequester.requestFocus()
+            keyboard?.show()
+        }
+    }
     val submit = {
         if (text.isNotBlank()) {
             onAdd(text, priority)
@@ -938,7 +954,7 @@ private fun QuickAddBar(
                         Icon(Icons.Default.AutoAwesome, contentDescription = "إضافة ذكية بالصوت أو النص")
                     }
                 },
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f).focusRequester(focusRequester)
             )
             Spacer(Modifier.width(8.dp))
             FilledIconButton(onClick = submit, enabled = text.isNotBlank(), modifier = Modifier.size(48.dp)) {

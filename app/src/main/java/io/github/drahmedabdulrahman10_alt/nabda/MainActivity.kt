@@ -3,6 +3,7 @@ package io.github.drahmedabdulrahman10_alt.nabda
 import android.Manifest
 import android.content.Context
 import android.os.Build
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
@@ -56,6 +57,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -91,6 +93,7 @@ import io.github.drahmedabdulrahman10_alt.nabda.ui.viewmodel.UiState
 import io.github.drahmedabdulrahman10_alt.nabda.ui.viewmodel.WeeksDashboardData
 import io.github.drahmedabdulrahman10_alt.nabda.ui.viewmodel.WeeksDashboardViewModel
 import io.github.drahmedabdulrahman10_alt.nabda.util.ArabicCalendarUtils
+import io.github.drahmedabdulrahman10_alt.nabda.widget.TodayWidgetProvider
 import java.util.Date
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
@@ -116,10 +119,19 @@ private val bottomTabs = listOf(
 )
 
 class MainActivity : ComponentActivity() {
+    // Bumped each time the widget's + button opens the app, so the quick-add field gets focus.
+    private var quickAddRequest by mutableIntStateOf(0)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        setContent { NabdaApp() }
+        if (savedInstanceState == null && intent?.action == TodayWidgetProvider.ACTION_QUICK_ADD) quickAddRequest++
+        setContent { NabdaApp(quickAddRequest) }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        if (intent.action == TodayWidgetProvider.ACTION_QUICK_ADD) quickAddRequest++
     }
 }
 
@@ -134,7 +146,7 @@ private inline fun <reified VM : androidx.lifecycle.ViewModel> nabdaViewModel(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun NabdaApp() {
+fun NabdaApp(quickAddRequest: Int = 0) {
     val context = LocalContext.current
     val repository = remember { RepositoryModule.provideNabdaRepository(context.applicationContext) }
     val themeMode by remember {
@@ -154,6 +166,14 @@ fun NabdaApp() {
     val notifier = remember { Notifier(snackbarHostState, scope) }
 
     val dailyViewModel = nabdaViewModel { DailyTasksViewModel(it, LOCAL_USER_ID) }
+
+    // The widget's + button: show today on "اليوم" with the quick-add field focused.
+    LaunchedEffect(quickAddRequest) {
+        if (quickAddRequest > 0) {
+            dailyViewModel.selectToday()
+            destination = NabdaDestination.TODAY
+        }
+    }
 
     fun navigate(target: NabdaDestination) {
         destination = target
@@ -232,6 +252,7 @@ fun NabdaApp() {
                                 viewModel = dailyViewModel,
                                 onOpenDailyManagement = { navigate(NabdaDestination.DAILY) },
                                 onOpenSettings = { navigate(NabdaDestination.SETTINGS) },
+                                focusQuickAddRequest = quickAddRequest,
                                 modifier = contentModifier.statusBarsPadding()
                             )
                         }
