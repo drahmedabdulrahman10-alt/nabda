@@ -15,7 +15,7 @@ import org.json.JSONObject
  * The on-device database. Column order in each table is the order the repository reads them in,
  * so new columns must be appended at the end.
  */
-class NabdaDatabase(context: Context) : SQLiteOpenHelper(context, "nabda.db", null, 3) {
+class NabdaDatabase(context: Context) : SQLiteOpenHelper(context, "nabda.db", null, 4) {
 
     override fun onConfigure(db: SQLiteDatabase) {
         db.enableWriteAheadLogging()
@@ -25,7 +25,7 @@ class NabdaDatabase(context: Context) : SQLiteOpenHelper(context, "nabda.db", nu
         db.execSQL(
             "CREATE TABLE tasks (id TEXT PRIMARY KEY, day_id TEXT NOT NULL, title TEXT NOT NULL, " +
                 "priority TEXT NOT NULL, done INTEGER NOT NULL, moved_from TEXT, " +
-                "created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL, $REMIND_COLUMN)"
+                "created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL, $REMIND_COLUMN, $ORDER_COLUMN)"
         )
         db.execSQL(
             "CREATE TABLE fixed_tasks (id TEXT PRIMARY KEY, title TEXT NOT NULL, ord INTEGER NOT NULL, " +
@@ -62,11 +62,17 @@ class NabdaDatabase(context: Context) : SQLiteOpenHelper(context, "nabda.db", nu
         if (oldVersion < 2) db.execSQL("ALTER TABLE fixed_tasks ADD COLUMN $WEEK_DAYS_COLUMN")
         // v3: optional reminder time on a task.
         if (oldVersion < 3) db.execSQL("ALTER TABLE tasks ADD COLUMN $REMIND_COLUMN")
+        // v4: tasks can be reordered by hand; existing ones keep the order they were added in.
+        if (oldVersion < 4) {
+            db.execSQL("ALTER TABLE tasks ADD COLUMN $ORDER_COLUMN")
+            db.execSQL("UPDATE tasks SET ord = created_at")
+        }
     }
 
     private companion object {
         const val WEEK_DAYS_COLUMN = "week_days INTEGER NOT NULL DEFAULT ${FixedTask.EVERY_DAY}"
         const val REMIND_COLUMN = "remind_minute INTEGER"
+        const val ORDER_COLUMN = "ord INTEGER NOT NULL DEFAULT 0"
     }
 
     private fun seedDefaults(db: SQLiteDatabase) {

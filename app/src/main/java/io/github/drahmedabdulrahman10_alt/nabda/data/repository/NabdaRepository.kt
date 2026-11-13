@@ -78,6 +78,7 @@ interface NabdaRepository {
     suspend fun moveTasksToDay(taskIds: List<String>, targetDayId: String): Result<Unit>
     suspend fun moveTaskToDate(task: DailyTask, targetDate: Date): Result<String>
     suspend fun deleteTask(taskId: String): Result<Unit>
+    suspend fun reorderTasks(orderedIds: List<String>): Result<Unit>
 
     suspend fun createFixedTask(
         title: String,
@@ -164,7 +165,8 @@ class LocalNabdaRepository(context: Context) : NabdaRepository {
                 userId = LOCAL_USER_ID,
                 createdAt = Timestamp(c.getLong(6)),
                 updatedAt = Timestamp(c.getLong(7)),
-                reminderMinuteOfDay = if (c.isNull(8)) null else c.getInt(8)
+                reminderMinuteOfDay = if (c.isNull(8)) null else c.getInt(8),
+                order = c.getLong(9)
             )
         }
         fixedTasks.value = db.queryAll("fixed_tasks") { c ->
@@ -455,6 +457,7 @@ class LocalNabdaRepository(context: Context) : NabdaRepository {
         put("created_at", createdAt?.millis ?: System.currentTimeMillis())
         put("updated_at", updatedAt?.millis ?: System.currentTimeMillis())
         put("remind_minute", reminderMinuteOfDay)
+        put("ord", if (order != 0L) order else createdAt?.millis ?: System.currentTimeMillis())
     }
 
     override suspend fun createTask(
@@ -568,6 +571,22 @@ class LocalNabdaRepository(context: Context) : NabdaRepository {
         if (targetDayId == task.dayId) return Result.success(targetDayId)
         return moveTaskToDay(task.id, targetDayId, task.dayId).map { targetDayId }
     }
+
+    override suspend fun reorderTasks(orderedIds: List<String>): Result<Unit> =
+        write { db ->
+            db.beginTransaction()
+            try {
+                orderedIds.forEachIndexed { index, id ->
+                    db.update("tasks", ContentValues().apply { put("ord", index + 1L) }, "id = ?", arrayOf(id))
+                }
+                db.setTransactionSuccessful()
+            } finally {
+                db.endTransaction()
+            }
+        }.map {
+            val position = orderedIds.withIndex().associate { (index, id) -> id to index + 1L }
+            tasks.update { list -> list.orEmpty().map { task -> position[task.id]?.let { task.copy(order = it) } ?: task } }
+        }
 
     override suspend fun deleteTask(taskId: String): Result<Unit> =
         write { db -> db.delete("tasks", "id = ?", arrayOf(taskId)) }.map {

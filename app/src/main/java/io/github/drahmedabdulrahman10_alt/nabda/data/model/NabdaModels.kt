@@ -48,9 +48,15 @@ data class DailyTask(
     val updatedAt: Timestamp? = null,
     /** Optional reminder on the task's own day, as minutes after midnight (0..1439). */
     val reminderMinuteOfDay: Int? = null
+,
+    /** Position within its day; lower comes first. 0 means "not set yet" (falls back to creation time). */
+    val order: Long = 0L
 ) {
     val priorityEnum: TaskPriority
         get() = TaskPriority.fromString(priority)
+
+    val sortKey: Long
+        get() = if (order != 0L) order else createdAt?.millis ?: 0L
 }
 
 data class FixedTask(

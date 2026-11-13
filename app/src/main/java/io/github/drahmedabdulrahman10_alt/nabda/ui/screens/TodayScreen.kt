@@ -110,6 +110,13 @@ import io.github.drahmedabdulrahman10_alt.nabda.ui.viewmodel.PinnedContactStatus
 import io.github.drahmedabdulrahman10_alt.nabda.ui.viewmodel.UiState
 import java.util.Calendar
 import java.util.Locale
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.ui.zIndex
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 
 @Composable
 private fun priorityColor(priority: TaskPriority): Color = when (priority) {
@@ -133,6 +140,14 @@ fun TodayScreen(
 
     var editingTask by remember { mutableStateOf<DailyTask?>(null) }
     var showAiDialog by remember { mutableStateOf(false) }
+
+    // Reordering: a long press lifts a task, dragging moves it, and the new order is saved on release.
+    // dragOrder holds the order shown while dragging (and until the saved order comes back).
+    val listState = rememberLazyListState()
+    val haptic = LocalHapticFeedback.current
+    var draggedTaskId by remember { mutableStateOf<String?>(null) }
+    var dragOffset by remember { mutableFloatStateOf(0f) }
+    var dragOrder by remember { mutableStateOf<List<String>?>(null) }
 
     LifecycleResumeEffect(Unit) {
         viewModel.onResume()
@@ -166,7 +181,17 @@ fun TodayScreen(
     }
 
     Column(modifier = modifier.fillMaxSize()) {
+        val savedIds = data.tasks.map { it.id }
+        LaunchedEffect(savedIds, draggedTaskId) {
+            if (draggedTaskId == null && dragOrder != null && dragOrder == savedIds) dragOrder = null
+        }
+        val tasksById = data.tasks.associateBy { it.id }
+        val shownTasks = dragOrder
+            ?.takeIf { it.toSet() == tasksById.keys }
+            ?.mapNotNull { tasksById[it] }
+            ?: data.tasks
         LazyColumn(
+            state = listState,
             modifier = Modifier.weight(1f),
             contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 16.dp)
         ) {
@@ -222,14 +247,64 @@ fun TodayScreen(
                     )
                 }
             } else {
-                items(data.tasks, key = { it.id }) { task ->
+                items(shownTasks, key = { it.id }) { task ->
+                    val isDragged = task.id == draggedTaskId
+                    val currentIds by rememberUpdatedState(shownTasks.map { it.id })
+                    val endDrag = {
+                        val order = dragOrder
+                        draggedTaskId = null
+                        dragOffset = 0f
+                        if (order != null && order != savedIds) viewModel.reorderTasks(order) else dragOrder = null
+                    }
                     TaskRow(
                         task = task,
                         onToggle = { viewModel.toggleTask(task) },
                         onOpen = { editingTask = task },
                         onDelete = { deleteWithUndo(task) },
                         onPostpone = { postponeWithUndo(task) },
-                        modifier = Modifier.animateItem()
+                        swipeEnabled = draggedTaskId == null,
+                        modifier = if (isDragged) {
+                            Modifier
+                                .zIndex(1f)
+                                .graphicsLayer {
+                                    translationY = dragOffset
+                                    scaleX = 1.02f
+                                    scaleY = 1.02f
+                                    shadowElevation = 12f
+                                }
+                        } else {
+                            Modifier.animateItem()
+                        },
+                        dragModifier = Modifier.pointerInput(task.id) {
+                            detectDragGesturesAfterLongPress(
+                                onDragStart = {
+                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    dragOrder = currentIds
+                                    draggedTaskId = task.id
+                                    dragOffset = 0f
+                                },
+                                onDrag = { change, amount ->
+                                    change.consume()
+                                    dragOffset += amount.y
+                                    val order = dragOrder ?: return@detectDragGesturesAfterLongPress
+                                    val items = listState.layoutInfo.visibleItemsInfo
+                                    val current = items.firstOrNull { it.key == task.id }
+                                        ?: return@detectDragGesturesAfterLongPress
+                                    val center = (current.offset + dragOffset + current.size / 2f).toInt()
+                                    val target = items.firstOrNull {
+                                        it.key != task.id && it.key in order && center in it.offset until it.offset + it.size
+                                    }
+                                    if (target != null) {
+                                        val from = order.indexOf(task.id)
+                                        val to = order.indexOf(target.key)
+                                        dragOrder = order.toMutableList().apply { add(to, removeAt(from)) }
+                                        dragOffset -= (target.offset - current.offset)
+                                    }
+                                },
+                                onDragEnd = { endDrag() },
+                                onDragCancel = { endDrag() }
+                            )
+                        }
                     )
                 }
             }
@@ -594,7 +669,9 @@ private fun TaskRow(
     onOpen: () -> Unit,
     onDelete: () -> Unit,
     onPostpone: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    swipeEnabled: Boolean = true,
+    dragModifier: Modifier = Modifier
 ) {
     val swipeState = rememberSwipeToDismissBoxState(
         confirmValueChange = { value ->
@@ -608,7 +685,9 @@ private fun TaskRow(
     )
     SwipeToDismissBox(
         state = swipeState,
-        modifier = modifier.padding(vertical = 3.dp),
+        enableDismissFromStartToEnd = swipeEnabled,
+        enableDismissFromEndToStart = swipeEnabled,
+        modifier = modifier.then(dragModifier).padding(vertical = 3.dp),
         backgroundContent = {
             val toEnd = swipeState.dismissDirection == SwipeToDismissBoxValue.StartToEnd
             val toStart = swipeState.dismissDirection == SwipeToDismissBoxValue.EndToStart
@@ -648,7 +727,7 @@ private fun TaskRow(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .combinedClickable(onClick = onOpen, onLongClick = onOpen)
+                    .clickable(onClick = onOpen)
                     .heightIn(min = 52.dp)
                     .padding(end = 14.dp)
             ) {

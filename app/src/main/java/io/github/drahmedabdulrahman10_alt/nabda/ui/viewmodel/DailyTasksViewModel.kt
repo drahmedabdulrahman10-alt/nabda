@@ -259,6 +259,10 @@ class DailyTasksViewModel(
         viewModelScope.launch { repository.updateTaskDetails(taskId, title, priority, reminderMinuteOfDay) }
     }
 
+    fun reorderTasks(orderedIds: List<String>) {
+        viewModelScope.launch { repository.reorderTasks(orderedIds) }
+    }
+
     fun deleteTask(task: DailyTask) {
         viewModelScope.launch { repository.deleteTask(task.id) }
     }
@@ -450,7 +454,7 @@ class DailyTasksViewModel(
             )
         }
 
-        val dayTasks = streams.tasks.filter { it.dayId == selectedDayId }
+        val dayTasks = streams.tasks.filter { it.dayId == selectedDayId }.sortedBy { it.sortKey }
 
         // Unfinished tasks from the last week, offered for carry-over when viewing today.
         val overdue = if (selectedDayId == todayDayId) {
