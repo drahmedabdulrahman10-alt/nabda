@@ -130,10 +130,23 @@ object SettingsJson {
         put("contactRandomEndHour", s.contactRandomEndHour.coerceIn(0, 23))
         put("habitAlertsEnabled", s.habitAlertsEnabled)
         put("aiProvider", s.normalizedProvider())
-        put("geminiApiKey", s.geminiApiKey.trim().take(500))
-        put("openRouterApiKey", s.openRouterApiKey.trim().take(500))
+        put("geminiApiKey", SecretBox.encrypt(s.geminiApiKey.trim().take(500)))
+        put("openRouterApiKey", SecretBox.encrypt(s.openRouterApiKey.trim().take(500)))
         put("aiModelName", s.aiModelName.trim().ifBlank { "gemini-2.5-flash" }.take(150))
     }.toString()
+
+    /** True when [raw] still holds an API key written before keys were encrypted. */
+    fun hasPlainSecrets(raw: String): Boolean {
+        val o = try {
+            JSONObject(raw)
+        } catch (e: Exception) {
+            return false
+        }
+        return listOf("geminiApiKey", "openRouterApiKey").any { name ->
+            val value = o.optString(name, "")
+            value.isNotEmpty() && !SecretBox.isEncrypted(value)
+        }
+    }
 
     fun fromJson(raw: String): UserSettings {
         val o = try {
@@ -160,8 +173,8 @@ object SettingsJson {
             contactRandomEndHour = o.optInt("contactRandomEndHour", d.contactRandomEndHour),
             habitAlertsEnabled = o.optBoolean("habitAlertsEnabled", d.habitAlertsEnabled),
             aiProvider = o.optString("aiProvider", d.aiProvider),
-            geminiApiKey = o.optString("geminiApiKey", ""),
-            openRouterApiKey = o.optString("openRouterApiKey", ""),
+            geminiApiKey = SecretBox.decrypt(o.optString("geminiApiKey", "")),
+            openRouterApiKey = SecretBox.decrypt(o.optString("openRouterApiKey", "")),
             aiModelName = o.optString("aiModelName", d.aiModelName)
         )
     }

@@ -239,10 +239,20 @@ class LocalNabdaRepository(context: Context) : NabdaRepository {
             )
         }
         reflections.value = db.queryAll("week_reflections") { c -> c.getString(0) to c.getString(1) }.toMap()
-        settings.value = db.queryAll("kv") { c -> c.getString(0) to c.getString(1) }
+        val rawSettings = db.queryAll("kv") { c -> c.getString(0) to c.getString(1) }
             .firstOrNull { it.first == KEY_SETTINGS }
-            ?.let { SettingsJson.fromJson(it.second) }
-            ?: UserSettings(id = LOCAL_USER_ID, userId = LOCAL_USER_ID)
+            ?.second
+        val loadedSettings = rawSettings?.let { SettingsJson.fromJson(it) }
+        settings.value = loadedSettings ?: UserSettings(id = LOCAL_USER_ID, userId = LOCAL_USER_ID)
+        // API keys saved before they were encrypted: store them encrypted now.
+        if (rawSettings != null && loadedSettings != null && SettingsJson.hasPlainSecrets(rawSettings)) {
+            database.writableDatabase.update(
+                "kv",
+                ContentValues().apply { put("v", SettingsJson.toJson(loadedSettings)) },
+                "k = ?",
+                arrayOf(KEY_SETTINGS)
+            )
+        }
     }
 
     /** Runs [block] on the database thread once the initial load has finished. */
