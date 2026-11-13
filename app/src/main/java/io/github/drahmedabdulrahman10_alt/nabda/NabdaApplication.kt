@@ -18,14 +18,15 @@ class NabdaApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
-        // Keep reminder alarms in step with the data: whenever the settings or the daily tasks
+        // Keep reminder alarms in step with the data: whenever the settings, the daily tasks or the tasks
         // change (and once at every start), set the alarms again.
         scope.launch {
             val repository = RepositoryModule.provideNabdaRepository(this@NabdaApplication)
             combine(
                 repository.observeUserSettings(LOCAL_USER_ID),
-                repository.observeFixedTasks(LOCAL_USER_ID)
-            ) { _, _ -> }.collectLatest {
+                repository.observeFixedTasks(LOCAL_USER_ID),
+                repository.observeTasks(LOCAL_USER_ID)
+            ) { _, _, _ -> }.collectLatest {
                 delay(500)
                 NabdaNotificationEngine.rescheduleAll(this@NabdaApplication)
             }

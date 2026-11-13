@@ -1,5 +1,7 @@
 package io.github.drahmedabdulrahman10_alt.nabda.ui.screens
 
+import android.app.TimePickerDialog
+import android.text.format.DateFormat
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -37,6 +39,7 @@ import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.Chat
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.NotificationsNone
 import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FormatQuote
@@ -105,6 +108,8 @@ import io.github.drahmedabdulrahman10_alt.nabda.ui.viewmodel.DayChipUi
 import io.github.drahmedabdulrahman10_alt.nabda.ui.viewmodel.FixedTaskStatusUi
 import io.github.drahmedabdulrahman10_alt.nabda.ui.viewmodel.PinnedContactStatusUi
 import io.github.drahmedabdulrahman10_alt.nabda.ui.viewmodel.UiState
+import java.util.Calendar
+import java.util.Locale
 
 @Composable
 private fun priorityColor(priority: TaskPriority): Color = when (priority) {
@@ -259,8 +264,8 @@ fun TodayScreen(
         TaskEditSheet(
             task = task,
             onDismiss = { editingTask = null },
-            onSave = { title, priority ->
-                viewModel.updateTask(task.id, title, priority)
+            onSave = { title, priority, reminder ->
+                viewModel.updateTask(task.id, title, priority, reminder)
                 editingTask = null
             },
             onPostpone = {
@@ -683,6 +688,21 @@ private fun TaskRow(
                         .weight(1f)
                         .padding(vertical = 8.dp)
                 )
+                val reminder = task.reminderMinuteOfDay
+                if (!task.isCompleted && reminder != null) {
+                    Spacer(Modifier.width(8.dp))
+                    Icon(
+                        Icons.Default.NotificationsNone,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(14.dp)
+                    )
+                    Text(
+                        text = formatMinuteOfDay(reminder),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
                 if (!task.isCompleted && task.priorityEnum != TaskPriority.MEDIUM) {
                     Spacer(Modifier.width(8.dp))
                     Text(
@@ -757,6 +777,14 @@ private fun DailyChips(items: List<FixedTaskStatusUi>, onToggle: (FixedTaskStatu
             }
         }
     }
+}
+
+/** "3:30 م" style time for a minute of the day. */
+private fun formatMinuteOfDay(minuteOfDay: Int): String {
+    val hour = minuteOfDay / 60
+    val minute = minuteOfDay % 60
+    val hour12 = if (hour % 12 == 0) 12 else hour % 12
+    return "%d:%02d %s".format(Locale.US, hour12, minute, if (hour < 12) "ص" else "م")
 }
 
 private fun TaskPriority.next(): TaskPriority = when (this) {
@@ -846,12 +874,24 @@ private fun QuickAddBar(
 private fun TaskEditSheet(
     task: DailyTask,
     onDismiss: () -> Unit,
-    onSave: (String, TaskPriority) -> Unit,
+    onSave: (String, TaskPriority, Int?) -> Unit,
     onPostpone: () -> Unit,
     onDelete: () -> Unit
 ) {
     var title by remember(task.id) { mutableStateOf(task.title) }
     var priority by remember(task.id) { mutableStateOf(task.priorityEnum) }
+    var reminder by remember(task.id) { mutableStateOf(task.reminderMinuteOfDay) }
+    val context = LocalContext.current
+    val pickTime = {
+        val start = reminder ?: (Calendar.getInstance().get(Calendar.HOUR_OF_DAY) + 1).coerceAtMost(23) * 60
+        TimePickerDialog(
+            context,
+            { _, hour, minute -> reminder = hour * 60 + minute },
+            start / 60,
+            start % 60,
+            DateFormat.is24HourFormat(context)
+        ).show()
+    }
     ModalBottomSheet(onDismissRequest = onDismiss) {
         Column(
             modifier = Modifier
@@ -865,8 +905,35 @@ private fun TaskEditSheet(
                 onValueChange = { title = it.take(300) },
                 label = { Text("المهمة") },
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                keyboardActions = KeyboardActions(onDone = { if (title.isNotBlank()) onSave(title, priority) }),
+                keyboardActions = KeyboardActions(onDone = { if (title.isNotBlank()) onSave(title, priority, reminder) }),
                 modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(Modifier.height(12.dp))
+            // Optional reminder at a time on the task's own day.
+            FilterChip(
+                selected = reminder != null,
+                onClick = pickTime,
+                label = { Text(reminder?.let { "تذكير ${formatMinuteOfDay(it)}" } ?: "إضافة تذكير") },
+                leadingIcon = {
+                    Icon(
+                        Icons.Default.NotificationsNone,
+                        contentDescription = null,
+                        modifier = Modifier.size(FilterChipDefaults.IconSize)
+                    )
+                },
+                trailingIcon = if (reminder != null) {
+                    {
+                        Icon(
+                            Icons.Default.Close,
+                            contentDescription = "إلغاء التذكير",
+                            modifier = Modifier
+                                .size(FilterChipDefaults.IconSize)
+                                .clickable { reminder = null }
+                        )
+                    }
+                } else {
+                    null
+                }
             )
             Spacer(Modifier.height(12.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -900,7 +967,7 @@ private fun TaskEditSheet(
                 }
                 Spacer(Modifier.weight(1f))
                 androidx.compose.material3.Button(
-                    onClick = { onSave(title, priority) },
+                    onClick = { onSave(title, priority, reminder) },
                     enabled = title.isNotBlank()
                 ) { Text("حفظ") }
             }

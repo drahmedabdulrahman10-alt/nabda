@@ -36,18 +36,21 @@ object NabdaNotificationEngine {
     const val CHANNEL_CONTACTS = "contacts"
     const val CHANNEL_HABITS = "habits"
     const val CHANNEL_FIXED_TASK_REMINDERS = "fixed_task_reminders"
+    const val CHANNEL_TASK_REMINDERS = "task_reminders"
 
     private const val PREFIX = "io.github.drahmedabdulrahman10_alt.nabda"
     const val ACTION_DAILY_QUOTE = "$PREFIX.ACTION_DAILY_QUOTE"
     const val ACTION_DAILY_CONTACT = "$PREFIX.ACTION_DAILY_CONTACT"
     const val ACTION_HABIT_CHECK = "$PREFIX.ACTION_HABIT_CHECK"
     const val ACTION_FIXED_TASK_REMINDER = "$PREFIX.ACTION_FIXED_TASK_REMINDER"
+    const val ACTION_TASK_REMINDER = "$PREFIX.ACTION_TASK_REMINDER"
 
     val reminderActions = setOf(
         ACTION_DAILY_QUOTE,
         ACTION_DAILY_CONTACT,
         ACTION_HABIT_CHECK,
-        ACTION_FIXED_TASK_REMINDER
+        ACTION_FIXED_TASK_REMINDER,
+        ACTION_TASK_REMINDER
     )
 
     private const val EXTRA_TASK_ID = "extra_task_id"
@@ -57,9 +60,11 @@ object NabdaNotificationEngine {
     private const val REQUEST_CONTACT = 1002
     private const val REQUEST_HABIT_CHECK = 1003
     private const val REQUEST_FIXED_BASE = 2000
+    private const val REQUEST_TASK_BASE = 3_000_000
 
     private const val PREFS = "nabda_reminders"
     private const val KEY_FIXED_CODES = "fixed_codes"
+    private const val KEY_TASK_CODES = "task_codes"
 
     fun ensureChannelsCreated(context: Context) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
@@ -73,7 +78,8 @@ object NabdaNotificationEngine {
                     CHANNEL_FIXED_TASK_REMINDERS,
                     "مواعيد المهام اليومية",
                     NotificationManager.IMPORTANCE_HIGH
-                )
+                ),
+                NotificationChannel(CHANNEL_TASK_REMINDERS, "تذكير المهام", NotificationManager.IMPORTANCE_HIGH)
             )
         )
     }
@@ -163,6 +169,19 @@ object NabdaNotificationEngine {
                     REQUEST_HABIT_CHECK,
                     "باقٍ لك اليوم ${pending.size} من مهامك اليومية",
                     pending.joinToString("، ") { it.title }
+                )
+            }
+            ACTION_TASK_REMINDER -> {
+                val taskId = intent.getStringExtra(EXTRA_TASK_ID) ?: return
+                val task = repository.observeTasks(LOCAL_USER_ID).first()
+                    .firstOrNull { it.id == taskId && !it.isCompleted && it.reminderMinuteOfDay != null }
+                    ?: return
+                postNotification(
+                    context,
+                    CHANNEL_TASK_REMINDERS,
+                    taskRequestCode(task.id),
+                    task.title,
+                    "حان وقت «${task.title}»."
                 )
             }
             ACTION_FIXED_TASK_REMINDER -> {
@@ -255,6 +274,65 @@ object NabdaNotificationEngine {
             scheduleSlot(context, "fixed_$code", false, code, ACTION_FIXED_TASK_REMINDER, false, 0, 0, 0, 0)
         }
         prefs.edit().putStringSet(KEY_FIXED_CODES, currentCodes).apply()
+
+        // One-off reminders on regular tasks: one exact alarm per unfinished task whose time is
+        // still ahead. Alarms of tasks that were finished, deleted or cleared get cancelled.
+        val previousTaskCodes = prefs.getStringSet(KEY_TASK_CODES, emptySet()).orEmpty()
+        val currentTaskCodes = HashSet<String>()
+        val now = System.currentTimeMillis()
+        for (task in repository.observeTasks(LOCAL_USER_ID).first()) {
+            val minute = task.reminderMinuteOfDay ?: continue
+            if (task.isCompleted) continue
+            val day = ArabicCalendarUtils.dateFromDayId(task.dayId) ?: continue
+            val triggerAt = Calendar.getInstance().apply {
+                time = day
+                set(Calendar.HOUR_OF_DAY, minute / 60)
+                set(Calendar.MINUTE, minute % 60)
+                set(Calendar.SECOND, 0)
+                set(Calendar.MILLISECOND, 0)
+            }.timeInMillis
+            if (triggerAt <= now) continue
+            val code = taskRequestCode(task.id)
+            currentTaskCodes += code.toString()
+            setAlarm(context, triggerAt, taskPendingIntent(context, code, task.id))
+        }
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as? AlarmManager
+        for (stale in previousTaskCodes - currentTaskCodes) {
+            val code = stale.toIntOrNull() ?: continue
+            alarmManager?.cancel(taskPendingIntent(context, code, null))
+        }
+        prefs.edit().putStringSet(KEY_TASK_CODES, currentTaskCodes).apply()
+    }
+
+    private fun taskRequestCode(taskId: String): Int = REQUEST_TASK_BASE + (taskId.hashCode() and 0xFFFFF)
+
+    private fun taskPendingIntent(context: Context, requestCode: Int, taskId: String?): PendingIntent =
+        PendingIntent.getBroadcast(
+            context,
+            requestCode,
+            Intent(context, NabdaNotificationReceiver::class.java).apply {
+                action = ACTION_TASK_REMINDER
+                if (taskId != null) putExtra(EXTRA_TASK_ID, taskId)
+            },
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+    /** Exact when the system allows it, otherwise inexact (which Android may delay by up to an hour). */
+    private fun setAlarm(context: Context, triggerAt: Long, pendingIntent: PendingIntent) {
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as? AlarmManager ?: return
+        val canExact = Build.VERSION.SDK_INT < Build.VERSION_CODES.S || alarmManager.canScheduleExactAlarms()
+        try {
+            if (canExact) {
+                alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, pendingIntent)
+            } else {
+                alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, pendingIntent)
+            }
+        } catch (ignored: SecurityException) {
+            try {
+                alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, pendingIntent)
+            } catch (alsoIgnored: SecurityException) {
+            }
+        }
     }
 
     private fun requestCodeFor(task: FixedTask): Int = REQUEST_FIXED_BASE + (task.id.hashCode() and 0xFFFFF)

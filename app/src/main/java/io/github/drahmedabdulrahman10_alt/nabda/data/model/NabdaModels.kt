@@ -45,7 +45,9 @@ data class DailyTask(
     val movedFromDayId: String? = null,
     val userId: String = "",
     val createdAt: Timestamp? = null,
-    val updatedAt: Timestamp? = null
+    val updatedAt: Timestamp? = null,
+    /** Optional reminder on the task's own day, as minutes after midnight (0..1439). */
+    val reminderMinuteOfDay: Int? = null
 ) {
     val priorityEnum: TaskPriority
         get() = TaskPriority.fromString(priority)

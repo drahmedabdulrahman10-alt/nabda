@@ -254,9 +254,9 @@ class DailyTasksViewModel(
         viewModelScope.launch { repository.toggleTaskCompleted(task.id, !task.isCompleted) }
     }
 
-    fun updateTask(taskId: String, title: String, priority: TaskPriority) {
+    fun updateTask(taskId: String, title: String, priority: TaskPriority, reminderMinuteOfDay: Int?) {
         if (title.isBlank()) return
-        viewModelScope.launch { repository.updateTaskDetails(taskId, title, priority) }
+        viewModelScope.launch { repository.updateTaskDetails(taskId, title, priority, reminderMinuteOfDay) }
     }
 
     fun deleteTask(task: DailyTask) {

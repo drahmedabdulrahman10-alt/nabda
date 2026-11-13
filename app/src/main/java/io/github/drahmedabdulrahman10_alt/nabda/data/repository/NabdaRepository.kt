@@ -68,7 +68,12 @@ interface NabdaRepository {
     suspend fun createTask(dayId: String, title: String, priority: TaskPriority, movedFromDayId: String? = null): Result<String>
     suspend fun restoreTask(task: DailyTask): Result<Unit>
     suspend fun toggleTaskCompleted(taskId: String, isCompleted: Boolean): Result<Unit>
-    suspend fun updateTaskDetails(taskId: String, title: String, priority: TaskPriority): Result<Unit>
+    suspend fun updateTaskDetails(
+        taskId: String,
+        title: String,
+        priority: TaskPriority,
+        reminderMinuteOfDay: Int? = null
+    ): Result<Unit>
     suspend fun moveTaskToDay(taskId: String, targetDayId: String, movedFromDayId: String?): Result<Unit>
     suspend fun moveTasksToDay(taskIds: List<String>, targetDayId: String): Result<Unit>
     suspend fun moveTaskToDate(task: DailyTask, targetDate: Date): Result<String>
@@ -158,7 +163,8 @@ class LocalNabdaRepository(context: Context) : NabdaRepository {
                 movedFromDayId = c.getStringOrNull(5),
                 userId = LOCAL_USER_ID,
                 createdAt = Timestamp(c.getLong(6)),
-                updatedAt = Timestamp(c.getLong(7))
+                updatedAt = Timestamp(c.getLong(7)),
+                reminderMinuteOfDay = if (c.isNull(8)) null else c.getInt(8)
             )
         }
         fixedTasks.value = db.queryAll("fixed_tasks") { c ->
@@ -448,6 +454,7 @@ class LocalNabdaRepository(context: Context) : NabdaRepository {
         put("moved_from", movedFromDayId)
         put("created_at", createdAt?.millis ?: System.currentTimeMillis())
         put("updated_at", updatedAt?.millis ?: System.currentTimeMillis())
+        put("remind_minute", reminderMinuteOfDay)
     }
 
     override suspend fun createTask(
@@ -499,15 +506,22 @@ class LocalNabdaRepository(context: Context) : NabdaRepository {
             it.copy(isCompleted = isCompleted)
         }
 
-    override suspend fun updateTaskDetails(taskId: String, title: String, priority: TaskPriority): Result<Unit> {
+    override suspend fun updateTaskDetails(
+        taskId: String,
+        title: String,
+        priority: TaskPriority,
+        reminderMinuteOfDay: Int?
+    ): Result<Unit> {
         val cleanTitle = title.trim().take(300)
+        val reminder = reminderMinuteOfDay?.coerceIn(0, 1439)
         return updateTask(
             taskId,
             ContentValues().apply {
                 put("title", cleanTitle)
                 put("priority", priority.name)
+                put("remind_minute", reminder)
             }
-        ) { it.copy(title = cleanTitle, priority = priority.name) }
+        ) { it.copy(title = cleanTitle, priority = priority.name, reminderMinuteOfDay = reminder) }
     }
 
     override suspend fun moveTaskToDay(taskId: String, targetDayId: String, movedFromDayId: String?): Result<Unit> =
