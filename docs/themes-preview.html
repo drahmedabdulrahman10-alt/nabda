@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ثيمات نَبضة</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root { --page:#F4F2EE; --ink:#1B1C1A; --muted:#62655F; --card:#FFFFFF; --line:#E2DED6; }
+  @media (prefers-color-scheme: dark) { :root { --page:#121413; --ink:#E8EAE7; --muted:#A2A7A3; --card:#1B1E1C; --line:#2C302D; } }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--page); color:var(--ink); font-family:"Cairo",system-ui,sans-serif; line-height:1.6; }
+  main { max-width:1180px; margin:0 auto; padding:28px 16px 64px; }
+  h1 { margin:0 0 6px; font-size:26px; }
+  .lead { color:var(--muted); margin:0 0 22px; max-width:760px; }
+  .note { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:14px 18px; margin-bottom:26px; }
+  .note > b { display:block; margin-bottom:4px; }
+  .note ul { margin:4px 0 0; padding-inline-start:20px; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(340px,1fr)); gap:18px; }
+  .theme { background:var(--card); border:1px solid var(--line); border-radius:18px; padding:16px; }
+  .theme h2 { margin:0; font-size:18px; display:flex; align-items:center; gap:8px; }
+  .theme h2 small { font-weight:400; color:var(--muted); font-size:13px; }
+  .theme p { margin:2px 0 12px; color:var(--muted); font-size:13.5px; }
+  .tag { font-size:11px; padding:1px 8px; border-radius:99px; background:#E9F3EE; color:#0D4A3A; }
+  .pair { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .swatches { display:flex; gap:6px; margin-top:12px; }
+  .swatches span { width:22px; height:22px; border-radius:7px; border:1px solid rgba(0,0,0,.08); }
+
+  /* Phone mock, coloured by the theme tokens set inline */
+  .phone { background:var(--bg); color:var(--tx); border-radius:20px; overflow:hidden; border:1px solid var(--ol); font-size:11px; }
+  .phone .in { padding:10px 10px 8px; }
+  .mode { font-size:10px; color:var(--mu); margin-bottom:4px; }
+  .head { display:flex; justify-content:space-between; align-items:center; }
+  .date { font-weight:700; font-size:12px; }
+  .hij { color:var(--mu); font-size:9.5px; }
+  .ring { width:26px; height:26px; border-radius:50%; border:3px solid var(--ol); border-top-color:var(--pr); }
+  .strip { display:flex; justify-content:space-between; margin:8px 0; }
+  .strip div { text-align:center; width:13%; font-size:9.5px; color:var(--mu); }
+  .strip b { display:block; color:var(--tx); font-weight:600; font-size:11px; margin-top:2px; }
+  .strip .sel b { background:var(--pr); color:var(--op); border-radius:50%; width:22px; height:22px; line-height:22px; margin:2px auto 0; }
+  .quote { background:var(--sf); border:1px solid var(--ol); border-radius:10px; padding:6px 8px; font-size:10px; }
+  .sec { display:flex; justify-content:space-between; margin:8px 0 4px; font-weight:700; font-size:11px; }
+  .sec span { color:var(--mu); font-weight:400; }
+  .task { display:flex; align-items:center; gap:6px; background:var(--sf); border:1px solid var(--ol); border-radius:10px; padding:6px 8px; margin-bottom:5px; }
+  .task .c { width:12px; height:12px; border-radius:50%; border:1.5px solid var(--mu); flex:none; }
+  .task.done .c { background:var(--pr); border-color:var(--pr); }
+  .task.done .t { text-decoration:line-through; color:var(--mu); }
+  .task .t { flex:1; }
+  .dot { width:6px; height:6px; border-radius:50%; }
+  .chips { display:flex; flex-wrap:wrap; gap:4px; }
+  .chip { border:1px solid var(--ol); border-radius:8px; padding:2px 7px; font-size:9.5px; }
+  .chip.on { background:var(--ct); color:var(--oc); border-color:var(--ct); }
+  .add { display:flex; align-items:center; gap:6px; margin-top:8px; }
+  .add .f { flex:1; background:var(--sf); border:1px solid var(--ol); border-radius:99px; padding:5px 10px; color:var(--mu); font-size:10px; }
+  .add .s { width:24px; height:24px; border-radius:50%; background:var(--pr); color:var(--op); text-align:center; line-height:24px; font-weight:700; }
+  .nav { display:flex; justify-content:space-around; background:var(--sf); border-top:1px solid var(--ol); padding:6px 0; font-size:9.5px; color:var(--mu); }
+  .nav .on { color:var(--tx); }
+  .nav .on i { background:var(--ct); }
+  .nav i { display:block; width:24px; height:12px; border-radius:99px; margin:0 auto 2px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>ثيمات نَبضة</h1>
+  <p class="lead">معاينة لشاشة «اليوم» بكل ثيم، نهارًا وليلًا. الثيم بيتطبّق على التطبيق كله (كل الشاشات والنوافذ والأزرار) وعلى نسخة الإصدار، والـ Widget بياخد لون الزرار والنقط منه. الاختيار من «الإعدادات»، والليل والنهار يفضلوا ماشيين مع الموبايل أو تثبّتهم.</p>
+
+  <div class="note">
+    <b>رأيي واقتراحاتي</b>
+    <ul>
+      <li>نسيب الثيم الحالي «نَبضة» (الزمردي) هو الافتراضي، والخمسة اللي اخترتهم إضافات.</li>
+      <li>الأربعة lemonade و pastel و garden و lofi في الأصل نهاري بس؛ عملت لكل واحد نسخة ليلية بنفس روحه علشان الوضع الليلي يفضل شغال.</li>
+      <li>ألوان الأولوية (أحمر «مهمة»، برتقاني عادية، رمادي «لاحقًا») ثابتة في كل الثيمات علشان معناها ما يتلخبطش.</li>
+      <li>اقتراح زيادة لو حبيت: <b>coffee</b> (بني دافي) أو <b>dim</b> (رمادي ليلي هادي). مش مرسومين هنا إلا لو قلت.</li>
+    </ul>
+  </div>
+
+  <div class="grid" id="grid"></div>
+</main>
+
+<script>
+const themes = [
+  { id:"nabda", name:"نَبضة", latin:"الحالي", desc:"الزمردي الحالي، الافتراضي.",
+    light:{bg:"#FAF7F0",sf:"#FFFFFF",tx:"#1B1C1A",mu:"#5F6360",pr:"#0D4A3A",op:"#FFFFFF",ct:"#CFE9DF",oc:"#0D4A3A",ol:"#E4DFD4"},
+    dark:{bg:"#0C1512",sf:"#141F1B",tx:"#E3E7E4",mu:"#A3AAA6",pr:"#72D5B6",op:"#00382B",ct:"#5A430F",oc:"#F5D58A",ol:"#24302B"} },
+  { id:"lemonade", name:"Lemonade", latin:"ليمونادة", desc:"أخضر ليموني مع أصفر فاتح؛ منعش ومبهج.",
+    light:{bg:"#F8FDEF",sf:"#FFFFFF",tx:"#1E2A10",mu:"#5E6B4F",pr:"#519903",op:"#FFFFFF",ct:"#F4EFA0",oc:"#4A4A00",ol:"#E1E8CF"},
+    dark:{bg:"#141A0E",sf:"#1D2515",tx:"#EEF3E3",mu:"#A9B39A",pr:"#9BD34A",op:"#1E2A00",ct:"#4A4A12",oc:"#F4EFA0",ol:"#2C3622"} },
+  { id:"nord", name:"Nord", latin:"نورد", desc:"أزرق قطبي هادي؛ مريح للعين وجميل بالليل.",
+    light:{bg:"#ECEFF4",sf:"#FFFFFF",tx:"#2E3440",mu:"#4C566A",pr:"#5E81AC",op:"#FFFFFF",ct:"#D8E3F0",oc:"#2E3440",ol:"#D8DEE9"},
+    dark:{bg:"#2E3440",sf:"#3B4252",tx:"#ECEFF4",mu:"#A3ABBA",pr:"#88C0D0",op:"#2E3440",ct:"#434C5E",oc:"#ECEFF4",ol:"#4C566A"} },
+  { id:"lofi", name:"Lofi", latin:"لو-فاي", desc:"أبيض وأسود بس؛ أبسط وأهدى ثيم.",
+    light:{bg:"#FFFFFF",sf:"#FAFAFA",tx:"#0D0D0D",mu:"#6B6B6B",pr:"#0D0D0D",op:"#FFFFFF",ct:"#EBEBEB",oc:"#0D0D0D",ol:"#E3E3E3"},
+    dark:{bg:"#0A0A0A",sf:"#171717",tx:"#F2F2F2",mu:"#9A9A9A",pr:"#F2F2F2",op:"#0A0A0A",ct:"#2A2A2A",oc:"#F2F2F2",ol:"#2A2A2A"} },
+  { id:"pastel", name:"Pastel", latin:"باستيل", desc:"لافندر وبمبي ونعناعي فاتحين؛ ناعم ولطيف.",
+    light:{bg:"#FFF8FB",sf:"#FFFFFF",tx:"#3A3346",mu:"#7A7287",pr:"#A98BC6",op:"#FFFFFF",ct:"#F6CBD1",oc:"#5A2D3A",ol:"#EFE3EC"},
+    dark:{bg:"#1F1A26",sf:"#2A2433",tx:"#F3EDF7",mu:"#B6ADC2",pr:"#D1B8EA",op:"#2E2140",ct:"#4A3346",oc:"#F6CBD1",ol:"#3A3346"} },
+  { id:"garden", name:"Garden", latin:"جاردن", desc:"أخضر زرعي مطفي مع لمسة وردي؛ طبيعي وهادي.",
+    light:{bg:"#F2F0EC",sf:"#FFFFFF",tx:"#1F2A22",mu:"#5E6A61",pr:"#5C7F67",op:"#FFFFFF",ct:"#F6DDDD",oc:"#6B3A3A",ol:"#E0DDD6"},
+    dark:{bg:"#161B17",sf:"#1F2620",tx:"#E9EEE8",mu:"#A4AFA6",pr:"#9CC3A6",op:"#17301E",ct:"#3E2F30",oc:"#F6DDDD",ol:"#2F3B31"} }
+];
+const prio = { high:"#D32F2F", med:"#D97706", low:"#8A94A6" };
+
+function phone(t, label) {
+  const vars = Object.entries(t).map(([k,v]) => `--${k}:${v}`).join(";");
+  return `<div class="phone" style="${vars}"><div class="in">
+    <div class="mode">${label}</div>
+    <div class="head"><div><div class="date">الجمعة، 13 نوفمبر</div><div class="hij">3 جمادى الآخرة 1448 هـ</div></div><div class="ring"></div></div>
+    <div class="strip">${["س","ح","ن","ث","ر","خ","ج"].map((d,i)=>`<div class="${i==6?"sel":""}">${d}<b>${7+i}</b></div>`).join("")}</div>
+    <div class="quote">❝ أَلَا بِذِكْرِ اللَّهِ تَطْمَئِنُّ الْقُلُوبُ</div>
+    <div class="sec">مهام اليوم <span>1 من 3</span></div>
+    <div class="task"><div class="c"></div><div class="t">مراجعة التقرير</div><span style="color:${prio.high};font-size:9px">مهمة</span><div class="dot" style="background:${prio.high}"></div></div>
+    <div class="task"><div class="c"></div><div class="t">شراء الخضار</div><div class="dot" style="background:${prio.med}"></div></div>
+    <div class="task done"><div class="c"></div><div class="t">الاتصال بالبنك</div></div>
+    <div class="sec">المهام اليومية <span>1 من 3</span></div>
+    <div class="chips"><span class="chip on">✓ أذكار الصباح</span><span class="chip">ورد القرآن</span><span class="chip">صلاة الضحى</span></div>
+    <div class="add"><div class="s">➤</div><div class="f">أضف مهمة…</div></div>
+  </div>
+  <div class="nav"><div class="on"><i></i>اليوم</div><div><i></i>التقويم</div><div><i></i>اليومية</div><div><i></i>المزيد</div></div></div>`;
+}
+
+document.getElementById("grid").innerHTML = themes.map(t => `
+  <section class="theme">
+    <h2>${t.name} <small>${t.latin}</small>${t.id==="nabda" ? '<span class="tag">الافتراضي</span>' : ""}</h2>
+    <p>${t.desc}</p>
+    <div class="pair">${phone(t.light,"نهار")}${phone(t.dark,"ليل")}</div>
+    <div class="swatches">${[t.light.pr,t.light.ct,t.light.bg,t.dark.pr,t.dark.bg].map(c=>`<span style="background:${c}"></span>`).join("")}</div>
+  </section>`).join("");
+</script>
+</body>
+</html>

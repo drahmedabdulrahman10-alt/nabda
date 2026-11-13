@@ -116,6 +116,7 @@ object SettingsJson {
 
     fun toJson(s: UserSettings): String = JSONObject().apply {
         put("themeMode", s.themeMode)
+        put("colorTheme", s.colorTheme)
         put("quoteNotificationsEnabled", s.quoteNotificationsEnabled)
         put("useRandomTimeForQuotes", s.useRandomTimeForQuotes)
         put("quoteNotificationHour", s.quoteNotificationHour.coerceIn(0, 23))
@@ -159,6 +160,7 @@ object SettingsJson {
             id = "local",
             userId = "local",
             themeMode = o.optString("themeMode", d.themeMode),
+            colorTheme = o.optString("colorTheme", d.colorTheme),
             quoteNotificationsEnabled = o.optBoolean("quoteNotificationsEnabled", d.quoteNotificationsEnabled),
             useRandomTimeForQuotes = o.optBoolean("useRandomTimeForQuotes", d.useRandomTimeForQuotes),
             quoteNotificationHour = o.optInt("quoteNotificationHour", d.quoteNotificationHour),

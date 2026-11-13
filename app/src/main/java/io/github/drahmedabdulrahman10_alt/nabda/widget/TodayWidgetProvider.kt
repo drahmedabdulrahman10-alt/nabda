@@ -6,6 +6,9 @@ import android.appwidget.AppWidgetProvider
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.res.ColorStateList
+import android.content.res.Configuration
+import android.os.Build
 import android.text.SpannableStringBuilder
 import android.text.Spanned
 import android.text.style.StrikethroughSpan
@@ -17,6 +20,8 @@ import io.github.drahmedabdulrahman10_alt.nabda.data.model.DailyTask
 import io.github.drahmedabdulrahman10_alt.nabda.data.model.TaskPriority
 import io.github.drahmedabdulrahman10_alt.nabda.data.repository.LOCAL_USER_ID
 import io.github.drahmedabdulrahman10_alt.nabda.di.RepositoryModule
+import androidx.compose.ui.graphics.toArgb
+import io.github.drahmedabdulrahman10_alt.nabda.ui.theme.AppTheme
 import io.github.drahmedabdulrahman10_alt.nabda.util.ArabicCalendarUtils
 import java.util.Date
 import java.util.Locale
@@ -131,6 +136,7 @@ class TodayWidgetProvider : AppWidgetProvider() {
 
             views.setOnClickPendingIntent(R.id.widget_root, openApp(context, requestCode = 0, action = null))
             views.setOnClickPendingIntent(R.id.widget_add, openApp(context, requestCode = 1, action = ACTION_QUICK_ADD))
+            tintAddButton(context, views)
             manager.updateAppWidget(ids, views)
         }
 
@@ -183,6 +189,23 @@ class TodayWidgetProvider : AppWidgetProvider() {
                 }
             )
             views.setViewVisibility(row.tag, View.VISIBLE)
+        }
+
+        /** Gives the + button the accent of the theme picked in Settings (Android 12+). */
+        private suspend fun tintAddButton(context: Context, views: RemoteViews) {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return
+            val settings = RepositoryModule.provideNabdaRepository(context)
+                .observeUserSettings(LOCAL_USER_ID).first()
+            val night = when (settings?.themeMode) {
+                "DARK" -> true
+                "LIGHT" -> false
+                else -> (context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) ==
+                    Configuration.UI_MODE_NIGHT_YES
+            }
+            val theme = AppTheme.fromId(settings?.colorTheme)
+            val colors = if (night) theme.dark else theme.light
+            views.setColorStateList(R.id.widget_add, "setBackgroundTintList", ColorStateList.valueOf(colors.primary.toArgb()))
+            views.setInt(R.id.widget_add, "setColorFilter", colors.onPrimary.toArgb())
         }
 
         private fun formatMinuteOfDay(minuteOfDay: Int): String {

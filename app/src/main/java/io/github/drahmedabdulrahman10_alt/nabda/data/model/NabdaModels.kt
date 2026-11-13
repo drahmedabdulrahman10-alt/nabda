@@ -138,6 +138,8 @@ data class UserSettings(
     val userId: String = "",
     /** "SYSTEM", "LIGHT" or "DARK". */
     val themeMode: String = "SYSTEM",
+    /** One of [io.github.drahmedabdulrahman10_alt.nabda.ui.theme.AppTheme] by name. */
+    val colorTheme: String = "NABDA",
     val quoteNotificationsEnabled: Boolean = true,
     val useRandomTimeForQuotes: Boolean = false,
     val quoteNotificationHour: Int = 8,

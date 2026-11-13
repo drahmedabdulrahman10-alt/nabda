@@ -91,6 +91,13 @@ import io.github.drahmedabdulrahman10_alt.nabda.ui.viewmodel.DailyScreenData
 import io.github.drahmedabdulrahman10_alt.nabda.ui.viewmodel.DailyTasksViewModel
 import io.github.drahmedabdulrahman10_alt.nabda.ui.viewmodel.SettingsViewModel
 import io.github.drahmedabdulrahman10_alt.nabda.ui.viewmodel.UiState
+import androidx.compose.foundation.border
+import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
+import io.github.drahmedabdulrahman10_alt.nabda.ui.theme.AppTheme
 
 /**
  * 4. Fixed Tasks Management (`FixedTasksScreen`)
@@ -356,6 +363,68 @@ fun FixedTasksScreen(
                     Text("إلغاء")
                 }
             }
+        )
+    }
+}
+
+/** A small preview of a theme (its page, card and accent colours) with its name. */
+@Composable
+private fun ThemeOption(
+    theme: AppTheme,
+    night: Boolean,
+    selected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val colors = if (night) theme.dark else theme.light
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = modifier
+            .clip(RoundedCornerShape(14.dp))
+            .border(
+                width = if (selected) 2.dp else 1.dp,
+                color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant,
+                shape = RoundedCornerShape(14.dp)
+            )
+            .clickable(onClick = onClick)
+            .testTag("theme_option_${theme.name}")
+            .padding(vertical = 10.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .size(width = 56.dp, height = 34.dp)
+                .clip(RoundedCornerShape(9.dp))
+                .background(colors.background)
+                .border(1.dp, colors.outlineVariant, RoundedCornerShape(9.dp))
+                .padding(5.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(width = 30.dp, height = 8.dp)
+                    .clip(RoundedCornerShape(4.dp))
+                    .background(colors.surface)
+                    .align(Alignment.TopStart)
+            )
+            Box(
+                modifier = Modifier
+                    .size(14.dp)
+                    .clip(CircleShape)
+                    .background(colors.primary)
+                    .align(Alignment.BottomEnd)
+            )
+            Box(
+                modifier = Modifier
+                    .size(width = 18.dp, height = 8.dp)
+                    .clip(RoundedCornerShape(4.dp))
+                    .background(colors.secondaryContainer)
+                    .align(Alignment.BottomStart)
+            )
+        }
+        Spacer(modifier = Modifier.height(6.dp))
+        Text(
+            text = theme.titleAr,
+            style = MaterialTheme.typography.labelMedium,
+            fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
         )
     }
 }
@@ -913,21 +982,54 @@ fun SettingsScreen(
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold
                             )
+                            Spacer(modifier = Modifier.height(12.dp))
+                            // Day / night: follow the phone, or pin one.
+                            val modes = listOf("SYSTEM" to "تلقائي", "LIGHT" to "نهار", "DARK" to "ليل")
+                            SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+                                modes.forEachIndexed { index, (mode, label) ->
+                                    SegmentedButton(
+                                        selected = draft.themeMode == mode,
+                                        onClick = {
+                                            draft = draft.copy(themeMode = mode)
+                                            viewModel.updateSettings(context, draft)
+                                        },
+                                        shape = SegmentedButtonDefaults.itemShape(index = index, count = modes.size),
+                                        modifier = Modifier.testTag("theme_mode_$mode")
+                                    ) { Text(label) }
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(14.dp))
+                            Text(
+                                text = "الثيم",
+                                style = MaterialTheme.typography.labelLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
                             Spacer(modifier = Modifier.height(8.dp))
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text("الوضع الليلي الداكن (Dark Mode)")
-                                Switch(
-                                    checked = draft.themeMode == "DARK",
-                                    onCheckedChange = {
-                                        draft = draft.copy(themeMode = if (it) "DARK" else "LIGHT")
-                                        viewModel.updateSettings(context, draft)
-                                    },
-                                    modifier = Modifier.testTag("dark_mode_switch")
-                                )
+                            val night = when (draft.themeMode) {
+                                "DARK" -> true
+                                "LIGHT" -> false
+                                else -> isSystemInDarkTheme()
+                            }
+                            AppTheme.entries.chunked(3).forEach { rowThemes ->
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(bottom = 8.dp)
+                                ) {
+                                    rowThemes.forEach { theme ->
+                                        ThemeOption(
+                                            theme = theme,
+                                            night = night,
+                                            selected = AppTheme.fromId(draft.colorTheme) == theme,
+                                            onClick = {
+                                                draft = draft.copy(colorTheme = theme.name)
+                                                viewModel.updateSettings(context, draft)
+                                            },
+                                            modifier = Modifier.weight(1f)
+                                        )
+                                    }
+                                }
                             }
                         }
                     }

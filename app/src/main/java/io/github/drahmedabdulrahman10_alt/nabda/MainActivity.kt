@@ -1,6 +1,7 @@
 package io.github.drahmedabdulrahman10_alt.nabda
 
 import android.Manifest
+import android.app.Activity
 import android.content.Context
 import android.os.Build
 import android.content.Intent
@@ -67,6 +68,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
+import androidx.core.view.WindowCompat
+import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -85,6 +89,7 @@ import io.github.drahmedabdulrahman10_alt.nabda.ui.screens.SettingsScreen
 import io.github.drahmedabdulrahman10_alt.nabda.ui.screens.TodayScreen
 import io.github.drahmedabdulrahman10_alt.nabda.ui.components.BulkScheduleImportDialog
 import io.github.drahmedabdulrahman10_alt.nabda.ui.components.InteractiveCalendarView
+import io.github.drahmedabdulrahman10_alt.nabda.ui.theme.AppTheme
 import io.github.drahmedabdulrahman10_alt.nabda.ui.theme.NabdaTheme
 import io.github.drahmedabdulrahman10_alt.nabda.ui.viewmodel.DailyTasksViewModel
 import io.github.drahmedabdulrahman10_alt.nabda.ui.viewmodel.GoalsViewModel
@@ -149,9 +154,21 @@ private inline fun <reified VM : androidx.lifecycle.ViewModel> nabdaViewModel(
 fun NabdaApp(quickAddRequest: Int = 0) {
     val context = LocalContext.current
     val repository = remember { RepositoryModule.provideNabdaRepository(context.applicationContext) }
-    val themeMode by remember {
-        repository.observeUserSettings(LOCAL_USER_ID).map { it?.themeMode ?: "SYSTEM" }.distinctUntilChanged()
-    }.collectAsStateWithLifecycle(initialValue = "SYSTEM")
+    // The last look is remembered in plain prefs so a cold start opens straight in it, without a
+    // flash of the default theme while the database loads.
+    val lookPrefs = remember { context.getSharedPreferences("nabda_prefs", Context.MODE_PRIVATE) }
+    val look by remember {
+        repository.observeUserSettings(LOCAL_USER_ID)
+            .map { (it?.themeMode ?: "SYSTEM") to (it?.colorTheme ?: "NABDA") }
+            .distinctUntilChanged()
+    }.collectAsStateWithLifecycle(
+        initialValue = (lookPrefs.getString("theme_mode", "SYSTEM") ?: "SYSTEM") to
+            (lookPrefs.getString("color_theme", "NABDA") ?: "NABDA")
+    )
+    val (themeMode, colorTheme) = look
+    LaunchedEffect(look) {
+        lookPrefs.edit().putString("theme_mode", themeMode).putString("color_theme", colorTheme).apply()
+    }
     val darkTheme = when (themeMode) {
         "DARK" -> true
         "LIGHT" -> false
@@ -184,7 +201,19 @@ fun NabdaApp(quickAddRequest: Int = 0) {
         destination = destination.parent ?: NabdaDestination.TODAY
     }
 
-    NabdaTheme(darkTheme = darkTheme) {
+    // Status and navigation bar icons follow the app's day/night choice, not only the phone's.
+    val view = LocalView.current
+    if (!view.isInEditMode) {
+        SideEffect {
+            val window = (view.context as? Activity)?.window ?: return@SideEffect
+            WindowCompat.getInsetsController(window, view).apply {
+                isAppearanceLightStatusBars = !darkTheme
+                isAppearanceLightNavigationBars = !darkTheme
+            }
+        }
+    }
+
+    NabdaTheme(darkTheme = darkTheme, appTheme = AppTheme.fromId(colorTheme)) {
         CompositionLocalProvider(LocalNotifier provides notifier) {
             Scaffold(
                 snackbarHost = {
