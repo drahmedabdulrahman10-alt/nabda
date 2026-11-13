@@ -226,7 +226,6 @@ class WeeksDashboardViewModel(
         val currentSat = ArabicCalendarUtils.getSaturdayOfWeek(now)
         val currentWeekId = ArabicCalendarUtils.buildWeekId(currentUserId, currentSat)
 
-        val activeHabitsCount = fixedTasks.count { it.isActive }
         val daysByWeek = days.groupBy { it.weekId }
         val tasksByDay = tasks.groupBy { it.dayId }
         val completionsByDay = fixedCompletions.groupBy { it.dayId }
@@ -254,6 +253,7 @@ class WeeksDashboardViewModel(
             val daySummaries = weekDays.map { day ->
                 val dayDate = day.date?.toDate() ?: now
                 val dayTasks = tasksByDay[day.id] ?: emptyList()
+                val activeHabitsCount = fixedTasks.count { it.isActive && it.isScheduledOn(dayDate) }
                 val completedDayTasks = dayTasks.count { it.isCompleted }
                 val completedHabits = (completionsByDay[day.id] ?: emptyList()).size.coerceAtMost(activeHabitsCount)
 
@@ -281,7 +281,7 @@ class WeeksDashboardViewModel(
             val totalWeekTasks = daySummaries.sumOf { it.totalTasks }
             val completedWeekTasks = daySummaries.sumOf { it.completedTasks }
             val completedWeekHabits = daySummaries.sumOf { it.completedHabits }
-            val totalWeekItems = totalWeekTasks + (daySummaries.size * activeHabitsCount)
+            val totalWeekItems = totalWeekTasks + daySummaries.sumOf { it.totalActiveHabits }
             val completedWeekItems = completedWeekTasks + completedWeekHabits
             val weekFraction = if (totalWeekItems > 0) {
                 (completedWeekItems.toFloat() / totalWeekItems.toFloat()).coerceIn(0f, 1f)

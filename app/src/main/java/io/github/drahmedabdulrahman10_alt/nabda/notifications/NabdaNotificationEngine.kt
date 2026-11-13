@@ -155,7 +155,7 @@ object NabdaNotificationEngine {
                     .filter { it.dayId == todayId }
                     .mapTo(HashSet()) { it.fixedTaskId }
                 val pending = repository.observeFixedTasks(LOCAL_USER_ID).first()
-                    .filter { it.isActive && it.id !in done }
+                    .filter { it.isActive && it.isScheduledOn(Date()) && it.id !in done }
                 if (pending.isEmpty()) return
                 postNotification(
                     context,
@@ -168,7 +168,7 @@ object NabdaNotificationEngine {
             ACTION_FIXED_TASK_REMINDER -> {
                 val taskId = intent.getStringExtra(EXTRA_TASK_ID) ?: return
                 val task = repository.observeFixedTasks(LOCAL_USER_ID).first()
-                    .firstOrNull { it.id == taskId && it.isActive && it.reminderEnabled }
+                    .firstOrNull { it.id == taskId && it.isActive && it.reminderEnabled && it.isScheduledOn(Date()) }
                     ?: return
                 val alreadyDone = repository.observeFixedTaskCompletions(LOCAL_USER_ID).first()
                     .any { it.fixedTaskId == taskId && it.dayId == todayId }

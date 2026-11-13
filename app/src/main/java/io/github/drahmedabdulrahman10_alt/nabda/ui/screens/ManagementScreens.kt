@@ -6,6 +6,10 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -155,6 +159,11 @@ fun FixedTasksScreen(
                             )
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
+                                text = repeatLabel(habit),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
                                 text = "تنبيه الانقطاع بعد: ${habit.missedDaysThreshold} أيام متتالية",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -208,6 +217,7 @@ fun FixedTasksScreen(
         var reminderEnabled by remember(target) { mutableStateOf(target?.reminderEnabled ?: true) }
         var hourStr by remember(target) { mutableStateOf((target?.reminderHour ?: 7).toString()) }
         var minuteStr by remember(target) { mutableStateOf((target?.reminderMinute ?: 0).toString()) }
+        var weekDays by remember(target) { mutableStateOf(target?.weekDays ?: FixedTask.EVERY_DAY) }
 
         AlertDialog(
             onDismissRequest = {
@@ -226,6 +236,38 @@ fun FixedTasksScreen(
                             .testTag("habit_title_input"),
                         singleLine = true
                     )
+                    // Repeat days, Saturday first; at least one day stays selected.
+                    Text("أيام التكرار", style = MaterialTheme.typography.labelLarge)
+                    Row(
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        WEEK_DAY_LETTERS.forEachIndexed { index, letter ->
+                            val bit = 1 shl index
+                            val selected = weekDays and bit != 0
+                            Surface(
+                                shape = CircleShape,
+                                color = if (selected) MaterialTheme.colorScheme.primary else Color.Transparent,
+                                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+                                modifier = Modifier
+                                    .size(34.dp)
+                                    .clip(CircleShape)
+                                    .clickable {
+                                        val next = weekDays xor bit
+                                        if (next != 0) weekDays = next
+                                    }
+                                    .testTag("habit_day_$index")
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Text(
+                                        letter,
+                                        color = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
+                                        style = MaterialTheme.typography.labelLarge
+                                    )
+                                }
+                            }
+                        }
+                    }
                     OutlinedTextField(
                         value = thresholdStr,
                         onValueChange = { thresholdStr = it.filter { ch -> ch.isDigit() } },
@@ -280,7 +322,8 @@ fun FixedTasksScreen(
                                 reminderEnabled = reminderEnabled,
                                 reminderHour = hour,
                                 reminderMinute = minute,
-                                nextOrder = habits.size + 1
+                                nextOrder = habits.size + 1,
+                                weekDays = weekDays
                             )
                         } else {
                             viewModel.updateFixedTask(
@@ -289,7 +332,8 @@ fun FixedTasksScreen(
                                     missedDaysThreshold = threshold,
                                     reminderEnabled = reminderEnabled,
                                     reminderHour = hour,
-                                    reminderMinute = minute
+                                    reminderMinute = minute,
+                                    weekDays = weekDays
                                 )
                             )
                         }
@@ -315,6 +359,16 @@ fun FixedTasksScreen(
         )
     }
 }
+
+private val WEEK_DAY_LETTERS = listOf("س", "ح", "ن", "ث", "ر", "خ", "ج")
+private val WEEK_DAY_NAMES = listOf("السبت", "الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة")
+
+private fun repeatLabel(habit: FixedTask): String =
+    if (habit.isEveryDay) {
+        "كل يوم"
+    } else {
+        WEEK_DAY_NAMES.filterIndexed { index, _ -> habit.weekDays and (1 shl index) != 0 }.joinToString("، ")
+    }
 
 /**
  * 5. Kinship & Contacts Management (`ContactsScreen`)

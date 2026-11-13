@@ -1,5 +1,6 @@
 package io.github.drahmedabdulrahman10_alt.nabda.data.model
 
+import java.util.Date
 
 enum class TaskPriority(val labelAr: String, val sortOrder: Int) {
     HIGH("مرتفعة", 0),
@@ -63,8 +64,25 @@ data class FixedTask(
     val endDate: Timestamp? = null,
     val userId: String = "",
     val createdAt: Timestamp? = null,
-    val updatedAt: Timestamp? = null
-)
+    val updatedAt: Timestamp? = null,
+    /** Days of the week the task repeats on: bit 0 = Saturday … bit 6 = Friday. */
+    val weekDays: Int = EVERY_DAY
+) {
+    val isEveryDay: Boolean get() = weekDays and EVERY_DAY == EVERY_DAY
+
+    fun isScheduledOn(date: Date): Boolean =
+        weekDays and (1 shl weekDayIndex(date)) != 0
+
+    companion object {
+        const val EVERY_DAY = 0b1111111
+
+        /** Index of [date] in the app's Saturday-first week (Saturday = 0 … Friday = 6). */
+        fun weekDayIndex(date: Date): Int {
+            val cal = java.util.Calendar.getInstance().apply { time = date }
+            return cal.get(java.util.Calendar.DAY_OF_WEEK) % 7
+        }
+    }
+}
 
 data class FixedTaskCompletion(
     val id: String = "",

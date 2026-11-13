@@ -80,7 +80,8 @@ interface NabdaRepository {
         missedDaysThreshold: Int,
         reminderEnabled: Boolean,
         reminderHour: Int,
-        reminderMinute: Int
+        reminderMinute: Int,
+        weekDays: Int = FixedTask.EVERY_DAY
     ): Result<String>
     suspend fun updateFixedTask(fixedTask: FixedTask): Result<Unit>
     suspend fun deleteFixedTask(fixedTaskId: String): Result<Unit>
@@ -172,7 +173,8 @@ class LocalNabdaRepository(context: Context) : NabdaRepository {
                 reminderMinute = c.getInt(7),
                 startDate = Timestamp(c.getLong(8)),
                 userId = LOCAL_USER_ID,
-                createdAt = Timestamp(c.getLong(9))
+                createdAt = Timestamp(c.getLong(9)),
+                weekDays = c.getInt(10)
             )
         }
         fixedCompletions.value = db.queryAll("fixed_task_completions") { c ->
@@ -571,6 +573,7 @@ class LocalNabdaRepository(context: Context) : NabdaRepository {
         put("reminder_minute", reminderMinute.coerceIn(0, 59))
         put("start_date", startDate?.millis ?: System.currentTimeMillis())
         put("created_at", createdAt?.millis ?: System.currentTimeMillis())
+        put("week_days", (weekDays and FixedTask.EVERY_DAY).takeIf { it != 0 } ?: FixedTask.EVERY_DAY)
     }
 
     override suspend fun createFixedTask(
@@ -579,7 +582,8 @@ class LocalNabdaRepository(context: Context) : NabdaRepository {
         missedDaysThreshold: Int,
         reminderEnabled: Boolean,
         reminderHour: Int,
-        reminderMinute: Int
+        reminderMinute: Int,
+        weekDays: Int
     ): Result<String> {
         val now = Timestamp.now()
         val fixedTask = FixedTask(
@@ -593,7 +597,8 @@ class LocalNabdaRepository(context: Context) : NabdaRepository {
             reminderMinute = reminderMinute,
             startDate = now,
             userId = LOCAL_USER_ID,
-            createdAt = now
+            createdAt = now,
+            weekDays = weekDays
         )
         return write { db -> db.insertOrThrow("fixed_tasks", null, fixedTask.toValues()) }.map {
             fixedTasks.update { it.orEmpty() + fixedTask }

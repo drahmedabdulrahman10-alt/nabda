@@ -4,6 +4,7 @@ import android.content.ContentValues
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
+import io.github.drahmedabdulrahman10_alt.nabda.data.model.FixedTask
 import io.github.drahmedabdulrahman10_alt.nabda.data.model.NabdaDefaults
 import io.github.drahmedabdulrahman10_alt.nabda.data.model.UserSettings
 import io.github.drahmedabdulrahman10_alt.nabda.util.ArabicCalendarUtils
@@ -14,7 +15,7 @@ import org.json.JSONObject
  * The on-device database. Column order in each table is the order the repository reads them in,
  * so new columns must be appended at the end.
  */
-class NabdaDatabase(context: Context) : SQLiteOpenHelper(context, "nabda.db", null, 1) {
+class NabdaDatabase(context: Context) : SQLiteOpenHelper(context, "nabda.db", null, 2) {
 
     override fun onConfigure(db: SQLiteDatabase) {
         db.enableWriteAheadLogging()
@@ -30,7 +31,7 @@ class NabdaDatabase(context: Context) : SQLiteOpenHelper(context, "nabda.db", nu
             "CREATE TABLE fixed_tasks (id TEXT PRIMARY KEY, title TEXT NOT NULL, ord INTEGER NOT NULL, " +
                 "missed_threshold INTEGER NOT NULL, active INTEGER NOT NULL, reminder_enabled INTEGER NOT NULL, " +
                 "reminder_hour INTEGER NOT NULL, reminder_minute INTEGER NOT NULL, start_date INTEGER NOT NULL, " +
-                "created_at INTEGER NOT NULL)"
+                "created_at INTEGER NOT NULL, $WEEK_DAYS_COLUMN)"
         )
         db.execSQL(
             "CREATE TABLE fixed_task_completions (fixed_task_id TEXT NOT NULL, day_id TEXT NOT NULL, " +
@@ -56,7 +57,14 @@ class NabdaDatabase(context: Context) : SQLiteOpenHelper(context, "nabda.db", nu
         seedDefaults(db)
     }
 
-    override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) = Unit
+    override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
+        // v2: daily tasks can repeat on chosen weekdays; existing ones keep repeating every day.
+        if (oldVersion < 2) db.execSQL("ALTER TABLE fixed_tasks ADD COLUMN $WEEK_DAYS_COLUMN")
+    }
+
+    private companion object {
+        const val WEEK_DAYS_COLUMN = "week_days INTEGER NOT NULL DEFAULT ${FixedTask.EVERY_DAY}"
+    }
 
     private fun seedDefaults(db: SQLiteDatabase) {
         val now = System.currentTimeMillis()

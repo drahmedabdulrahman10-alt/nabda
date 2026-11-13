@@ -298,7 +298,8 @@ class DailyTasksViewModel(
         reminderEnabled: Boolean,
         reminderHour: Int,
         reminderMinute: Int,
-        nextOrder: Int
+        nextOrder: Int,
+        weekDays: Int = FixedTask.EVERY_DAY
     ) {
         if (title.isBlank()) return
         viewModelScope.launch {
@@ -308,7 +309,8 @@ class DailyTasksViewModel(
                 missedDaysThreshold = missedDaysThreshold,
                 reminderEnabled = reminderEnabled,
                 reminderHour = reminderHour,
-                reminderMinute = reminderMinute
+                reminderMinute = reminderMinute,
+                weekDays = weekDays
             )
         }
     }
@@ -410,25 +412,32 @@ class DailyTasksViewModel(
             completedDaysByTask.getOrPut(completion.fixedTaskId) { HashSet() }.add(completion.dayId)
         }
         val cursor = Calendar.getInstance()
-        val fixedStatus = streams.fixedTasks.filter { it.isActive }.map { habit ->
+        // Only the task's own weekdays count: days it does not repeat on neither break a streak
+        // nor add to the missed-days warning.
+        val fixedStatus = streams.fixedTasks.filter { it.isActive && it.isScheduledOn(dayDate) }.map { habit ->
             val doneDays: Set<String> = completedDaysByTask[habit.id] ?: emptySet()
             val doneOnSelected = selectedDayId in doneDays
 
             var streak = 0
             cursor.time = dayDate
             if (!doneOnSelected) cursor.add(Calendar.DAY_OF_YEAR, -1)
-            while (streak < 365 && (prefix + ArabicCalendarUtils.dateKey(cursor)) in doneDays) {
-                streak++
+            for (step in 0 until 400) {
+                if (habit.isScheduledOn(cursor.time)) {
+                    if ((prefix + ArabicCalendarUtils.dateKey(cursor)) !in doneDays) break
+                    streak++
+                }
                 cursor.add(Calendar.DAY_OF_YEAR, -1)
             }
 
             var missed = 0
             val habitStart = habit.startDate?.let { ArabicCalendarUtils.startOfDay(it.toDate()).time } ?: 0L
             cursor.time = now
-            while (missed < 60 && cursor.timeInMillis >= habitStart &&
-                (prefix + ArabicCalendarUtils.dateKey(cursor)) !in doneDays
-            ) {
-                missed++
+            for (step in 0 until 400) {
+                if (missed >= 60 || cursor.timeInMillis < habitStart) break
+                if (habit.isScheduledOn(cursor.time)) {
+                    if ((prefix + ArabicCalendarUtils.dateKey(cursor)) in doneDays) break
+                    missed++
+                }
                 cursor.add(Calendar.DAY_OF_YEAR, -1)
             }
 
